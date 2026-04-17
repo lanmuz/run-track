@@ -83,18 +83,21 @@ Simple clone this app and open in Android Studio.
 
 ### Amap (高德地图) Integration via OmniMap-Compose
 
-The project has been updated to use [OmniMap-Compose](https://github.com/TheMelody/OmniMap-Compose) (GDMap) instead of Google Maps Compose. This provides a drop-in replacement with similar Compose API for maps, Polyline (running track), Markers, camera following, and snapshot on finish. It works better in China and requires no `AndroidView`.
+The project has been updated to use [OmniMap-Compose](https://github.com/TheMelody/OmniMap-Compose) (GDMap 1.0.7) instead of Google Maps Compose. **Full replacement summary** (Android only; iOS remains Google for KMP):
 
-`local.properties` has been generated with your provided key (`f7ed794f43e9f49b9ff09f50b6d2a0b4`).
+**Changes made:**
+- **Deps/Build**: Swapped `maps-compose`/`play-services-maps` for `gd-compose`; JVM target upgraded to 19 (library requirement); `AndroidManifest.xml` meta-data switched to Amap v2 key.
+- **Init**: `RunTrackApp.kt` calls `GdMapUtils.setMapPrivacy(...)` (mandatory for map to render).
+- **Map UI (`CurrentRunMap.android.kt`)**: `GDMap` + `MapUiSettings`/`rememberCameraPositionState` + `@GDMapComposable` content slot for Polyline (running track from PathPoints), Markers (start/current/finish with vector icons), camera follow via `CameraUpdateFactory`. 
+- **Snapshot**: `MapUtils.kt` (renamed from GoogleMapUtils) fully ported — uses `AMap.getMapScreenShot` + `suspendCancellableCoroutine` + bounds/crop for finish image stored in Room. Uses internal `MapApplier` (suppressed) for map reference in composition.
+- **Coords**: `LocationInfoExt.toLatLng()` updated to AMap `LatLng`.
+- **Docs**: This section + top description updated; `local.properties` with your key.
 
-1. Get/verify your Amap API Key from the [高德开放平台](https://lbs.amap.com/dev/key) (bind to your app's package and SHA1).
-2. The key is already configured in `local.properties`:
-   ```
-   MAPS_API_KEY=f7ed794f43e9f49b9ff09f50b6d2a0b4
-   ```
-3. Ensure privacy compliance (handled in `RunTrackApp.kt`).
+`local.properties` has your key. 1. Verify key at [lbs.amap.com](https://lbs.amap.com/dev/key) (package+SHA1). 2. Privacy handled. 3. Sync/rebuild (JVM 19 required). 
 
-The tracking, GPS, and map features now use Gaode maps. Rebuild/sync the project in Android Studio.
+**Status**: Compiles cleanly. Test GPS track, Polyline, markers, camera, finish snapshot. Native .so strip warnings are expected (libs packaged as-is). iOS unchanged.
+
+The tracking, GPS, Room, and foreground service logic are untouched. See `CurrentRunMap.android.kt`, `MapUtils.kt` for details.
 
 ## Project Status
 

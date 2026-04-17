@@ -1,6 +1,6 @@
-package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
-
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
+package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
