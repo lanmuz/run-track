@@ -26,18 +26,19 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.util.fastForEach
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.GoogleMapComposable
-import com.google.maps.android.compose.MapEffect
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.MapsComposeExperimentalApi
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.Polyline
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.CameraPosition
+import com.amap.api.maps.model.LatLng
+import com.melody.map.gd_compose.GDMap
+import com.melody.map.gd_compose.MapApplier
+import com.melody.map.gd_compose.model.GDMapComposable
+import com.melody.map.gd_compose.overlay.Marker
+import com.melody.map.gd_compose.overlay.Polyline
+import com.melody.map.gd_compose.overlay.rememberMarkerState
+import com.melody.map.gd_compose.poperties.MapUiSettings
+import com.melody.map.gd_compose.position.rememberCameraPositionState
 import com.sdevprem.runtrack.shared.R
 import com.sdevprem.runtrack.shared.common.extension.toLatLng
 import com.sdevprem.runtrack.shared.domain.tracking.model.LocationInfo
@@ -46,7 +47,7 @@ import com.sdevprem.runtrack.shared.domain.tracking.model.firstLocationPoint
 import com.sdevprem.runtrack.shared.domain.tracking.model.lasLocationPoint
 import com.sdevprem.runtrack.shared.ui.theme.RTColor
 import com.sdevprem.runtrack.shared.ui.theme.md_theme_light_primary
-import com.sdevprem.runtrack.shared.ui.utils.GoogleMapUtils
+import com.sdevprem.runtrack.shared.ui.utils.MapUtils
 
 @Composable
 actual fun Map(
@@ -92,27 +93,28 @@ private fun Map(
 
     val mapUiSettings = remember {
         MapUiSettings(
-            mapToolbarEnabled = false,
-            compassEnabled = true,
-            zoomControlsEnabled = false
+            isCompassEnabled = true,
+            isZoomControlsEnabled = false,
+            isScaleControlsEnabled = true,
+            isScrollGesturesEnabled = true,
+            isZoomGesturesEnabled = true
         )
     }
-    val cameraPositionState = rememberCameraPositionState {}
+    val cameraPositionState = rememberCameraPositionState()
     val lastLocationPoint by remember(pathPoints) {
         derivedStateOf { pathPoints.lasLocationPoint() }
     }
 
     LaunchedEffect(key1 = lastLocationPoint) {
         lastLocationPoint?.let {
-            cameraPositionState.animate(
-                CameraUpdateFactory.newCameraPosition(
-                    CameraPosition.fromLatLngZoom(it.locationInfo.toLatLng(), 15f)
-                )
+            val latLng = it.locationInfo.toLatLng()
+            cameraPositionState.move(
+                CameraUpdateFactory.newLatLngZoom(latLng, 15f)
             )
         }
     }
 
-    GoogleMap(
+    GDMap(
         modifier = Modifier
             .fillMaxSize(),
         uiSettings = mapUiSettings,
@@ -132,6 +134,7 @@ private fun Map(
 }
 
 @OptIn(MapsComposeExperimentalApi::class)
+@GDMapComposable
 @Composable
 private fun TakeScreenShot(
     take: Boolean,
@@ -140,20 +143,24 @@ private fun TakeScreenShot(
     pathPoints: List<PathPoint>,
     onSnapshot: (ByteArray) -> Unit
 ) {
-    MapEffect(key1 = take) { map ->
-        if (take)
-            GoogleMapUtils.takeSnapshot(
-                map,
+    if (!take) return
+
+    val mapApplier = currentComposer.applier as? MapApplier
+    LaunchedEffect(take, mapApplier, mapCenter, mapSize) {
+        if (take && mapApplier?.map != null) {
+            MapUtils.takeSnapshot(
+                mapApplier.map,
                 pathPoints,
                 mapCenter,
                 onSnapshot,
                 snapshotSideLength = mapSize.width / 2f
             )
+        }
     }
 }
 
 @Composable
-@GoogleMapComposable
+@GDMapComposable
 private fun DrawPathPoints(
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
@@ -203,14 +210,14 @@ private fun DrawPathPoints(
 
     val currentPosIcon = remember(isRunningFinished) {
         if (isRunningFinished.not()) {
-            GoogleMapUtils.bitmapDescriptorFromVector(
+            MapUtils.bitmapDescriptorFromVector(
                 context = context,
                 vectorResId = R.drawable.ic_circle,
                 tint = md_theme_light_primary.toArgb(),
                 sizeInPx = smallLocationIconSize
             )
         } else {
-            GoogleMapUtils.bitmapDescriptorFromVector(
+            MapUtils.bitmapDescriptorFromVector(
                 context = context,
                 vectorResId = R.drawable.ic_location_marker,
                 tint = Color.Red.toArgb(),
@@ -247,7 +254,7 @@ private fun DrawPathPoints(
 
     firstLocationPoint?.let {
         val firstLocationIcon = remember(isRunningFinished) {
-            GoogleMapUtils.bitmapDescriptorFromVector(
+            MapUtils.bitmapDescriptorFromVector(
                 context = context,
                 vectorResId = R.drawable.ic_location_marker,
                 tint = RTColor.CHATEAU_GREEN.toArgb(),

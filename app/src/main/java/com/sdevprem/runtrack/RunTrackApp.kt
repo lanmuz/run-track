@@ -1,6 +1,7 @@
 package com.sdevprem.runtrack
 
 import android.app.Application
+import com.melody.map.gd_compose.utils.MapUtils as GdMapUtils
 import com.sdevprem.runtrack.shared.background.notification.TrackingNotificationHelper
 import com.sdevprem.runtrack.shared.di.AppModule
 import com.sdevprem.runtrack.shared.di.PlatformModule
@@ -16,6 +17,8 @@ class RunTrackApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Timber.plant(Timber.DebugTree())
+        // Set map privacy agreement for Gaode/OmniMap (must be called immediately after user agrees to privacy policy)
+        GdMapUtils.setMapPrivacy(this, true)
         startKoin {
             androidContext(this@RunTrackApp)
             androidLogger()

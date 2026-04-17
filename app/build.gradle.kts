@@ -85,8 +85,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     //maps
-    implementation(libs.maps.compose)
-    implementation(libs.play.services.maps)
+    implementation(libs.gd.compose)
     implementation(libs.play.services.location)
 
     // lifecycle

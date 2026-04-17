@@ -38,11 +38,8 @@
         </activity>
 
         <meta-data
-            android:name="com.google.android.geo.API_KEY"
+            android:name="com.amap.api.v2.apikey"
             android:value="${MAPS_API_KEY}" />
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
 
         <service
             android:name=".shared.background.tracking.service.TrackingService"

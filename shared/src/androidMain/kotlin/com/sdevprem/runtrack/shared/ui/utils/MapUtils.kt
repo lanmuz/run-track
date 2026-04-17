@@ -7,21 +7,23 @@ import androidx.annotation.DrawableRes
 import androidx.compose.ui.geometry.Offset
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLngBounds
+import com.amap.api.maps.AMap
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.BitmapDescriptor
+import com.amap.api.maps.model.BitmapDescriptorFactory
+import com.amap.api.maps.model.LatLngBounds
 import com.sdevprem.runtrack.shared.common.extension.toLatLng
 import com.sdevprem.runtrack.shared.domain.tracking.model.PathPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
-object GoogleMapUtils {
+object MapUtils {
 
     private const val MAP_SNAPSHOT_DELAY = 500L
 
     suspend fun takeSnapshot(
-        map: GoogleMap,
+        map: AMap,
         pathPoints: List<PathPoint>,
         mapCenter: Offset,
         onSnapshot: (ByteArray) -> Unit,
@@ -49,18 +51,29 @@ object GoogleMapUtils {
 
         //A delay to load the icons and map properly before snapshot
         delay(MAP_SNAPSHOT_DELAY)
-        map.snapshot {
-            it?.let {
-                //crop to get a square image which fits the user path
-                val croppedBitmap = Bitmap.createBitmap(
-                    it,
-                    startOffset.x.toInt(), //start x
-                    startOffset.y.toInt(), //start y
-                    snapshotSideLength.toInt(), //width
-                    snapshotSideLength.toInt() //height
-                )
-                onSnapshot(croppedBitmap.toByteArray())
-            }
+
+        val bitmap = suspendCancellableCoroutine<Bitmap?> { continuation ->
+            map.getMapScreenShot(object : AMap.OnMapScreenShotListener {
+                override fun onMapScreenShot(bitmap: Bitmap?) {
+                    continuation.resume(bitmap)
+                }
+
+                override fun onMapScreenShot(bitmap: Bitmap?, status: Int) {
+                    continuation.resume(bitmap)
+                }
+            })
+        }
+
+        bitmap?.let {
+            //crop to get a square image which fits the user path
+            val croppedBitmap = Bitmap.createBitmap(
+                it,
+                startOffset.x.toInt(), //start x
+                startOffset.y.toInt(), //start y
+                snapshotSideLength.toInt(), //width
+                snapshotSideLength.toInt() //height
+            )
+            onSnapshot(croppedBitmap.toByteArray())
         }
     }
 

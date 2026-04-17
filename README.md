@@ -1,20 +1,17 @@
 # RunTrack
 
-RunTrack is a Fitness Tracking app utilizing modern Android technologies, including
-Jetpack Compose, MVVM architecture, and Google Maps API. The app allows users to
-track their running activities, displaying real-time routes on an interactive map
-while storing essential statistics using Room database.
+RunTrack is a Fitness Tracking app utilizing modern Android/KMP technologies, including
+Jetpack Compose, MVVM architecture, and **OmniMap-Compose (Gaode/高德地图)**. The app allows users to
+track their running activities with real-time GPS, displaying routes on an interactive map
+(Polyline + Markers) while storing statistics using Room. (Google Maps replaced for better China support and simpler Compose integration.)
 
 ## Features
 1. Live tracking of running activity using GPS.
-2. Tracking of user's running path in Map using Google Map Compose library.
-3. Using Foreground Service, even the user closed the app and remove
-   from the background, this app stills continue to track user running stats.
+2. Tracking of user's running path in Map using OmniMap-Compose (GDMap) with Polyline, Markers, camera follow, and finish snapshot.
+3. Using Foreground Service, even if the user closes the app and removes it from the background, this app still continues to track user running stats.
 4. Room database to store and manage running statistics.
-5. Handling nested navigation, Deep linking, conditional navigation to on
-   boarding screen using Jetpack Navigation Component.
-6. New Jetpack Compose image picker - helps to pick image
-   without any permission.
+5. Handling nested navigation, Deep linking, conditional navigation to onboarding screen using Jetpack Navigation Component.
+6. New Jetpack Compose image picker - helps to pick image without any permission.
 7. Paging3 integration.
 8. Dynamic color support in dark and light theme.
 9. Weekly Statistics with filters in graph.
@@ -58,8 +55,8 @@ For navigation between screens and deep linking.
 [Room](https://developer.android.com/jetpack/androidx/releases/room) :
 To store and manage running statistics.
 
-[Google Maps API](https://developers.google.com/maps/documentation/android-sdk) :
-To track user's running activity such as speed, distance and path on the map.
+[OmniMap-Compose (Gaode)](https://github.com/TheMelody/OmniMap-Compose) :
+Drop-in Jetpack Compose map library (GDMap) for Polyline (running track), Markers, camera, snapshot. Replaces Google Maps.
 
 [Hilt](https://developer.android.com/training/dependency-injection/hilt-android) :
 For injecting dependencies.
@@ -84,20 +81,20 @@ HLD of tracking architecture is shown in the below image:
 
 Simple clone this app and open in Android Studio.
 
-### Google Map Integration
+### Amap (高德地图) Integration via OmniMap-Compose
 
-Do these steps if you want to show google maps. The tracking
-functionalities will work as usual even if you don't do
-these step.
+The project has been updated to use [OmniMap-Compose](https://github.com/TheMelody/OmniMap-Compose) (GDMap) instead of Google Maps Compose. This provides a drop-in replacement with similar Compose API for maps, Polyline (running track), Markers, camera following, and snapshot on finish. It works better in China and requires no `AndroidView`.
 
-1. Create and Get Google Maps API key by using this official
-   [guide](https://developers.google.com/maps/documentation/android-sdk/get-api-key)
-2. Open `local.properties` file.
-3. Enter your API key like this:
+`local.properties` has been generated with your provided key (`f7ed794f43e9f49b9ff09f50b6d2a0b4`).
 
-```
-MAPS_API_KEY=your_maps_api_key
-```
+1. Get/verify your Amap API Key from the [高德开放平台](https://lbs.amap.com/dev/key) (bind to your app's package and SHA1).
+2. The key is already configured in `local.properties`:
+   ```
+   MAPS_API_KEY=f7ed794f43e9f49b9ff09f50b6d2a0b4
+   ```
+3. Ensure privacy compliance (handled in `RunTrackApp.kt`).
+
+The tracking, GPS, and map features now use Gaode maps. Rebuild/sync the project in Android Studio.
 
 ## Project Status
 

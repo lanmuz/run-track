@@ -25,6 +25,7 @@ multiplatform-navigation = "2.9.1"
 maps-compose = "5.0.3"
 play-services-location = "21.3.0"
 play-services-maps = "18.2.0"
+gd-compose = "1.0.7"
 
 pods-google-maps = "9.1.1"
 pods-google-ios-maps-utils = "6.0.0"
@@ -126,6 +127,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "play-services-maps" }
+gd-compose = { module = "io.github.TheMelody:gd_compose", version.ref = "gd-compose" }
 
 #paging
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
