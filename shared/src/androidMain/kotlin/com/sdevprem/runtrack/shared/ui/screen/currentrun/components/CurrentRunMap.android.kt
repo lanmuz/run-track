@@ -1,5 +1,7 @@
 package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
 
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
@@ -94,10 +96,10 @@ private fun Map(
     val mapUiSettings = remember {
         MapUiSettings(
             isCompassEnabled = true,
-            isZoomControlsEnabled = false,
             isScaleControlsEnabled = true,
             isScrollGesturesEnabled = true,
-            isZoomGesturesEnabled = true
+            isZoomGesturesEnabled = true,
+            isZoomEnabled = true
         )
     }
     val cameraPositionState = rememberCameraPositionState()
@@ -133,7 +135,6 @@ private fun Map(
     }
 }
 
-@OptIn(MapsComposeExperimentalApi::class)
 @GDMapComposable
 @Composable
 private fun TakeScreenShot(
@@ -228,7 +229,7 @@ private fun DrawPathPoints(
     val currentPosLargeIcon = remember(isRunningFinished) {
         if (isRunningFinished) return@remember null
 
-        GoogleMapUtils.bitmapDescriptorFromVector(
+        MapUtils.bitmapDescriptorFromVector(
             context = context,
             vectorResId = R.drawable.ic_circle,
             tint = md_theme_light_primary.copy(alpha = 0.4f).toArgb(),
