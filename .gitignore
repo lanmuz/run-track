@@ -12,6 +12,9 @@
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+.local.properties
 .kotlin/
 iosApp/Secrets.xcconfig
+
+# Gaode/OmniMap reference sample (for map replacement debugging only)
+高德参考/

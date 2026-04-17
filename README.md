@@ -95,9 +95,18 @@ The project has been updated to use [OmniMap-Compose](https://github.com/TheMelo
 
 `local.properties` has your key. 1. Verify key at [lbs.amap.com](https://lbs.amap.com/dev/key) (package+SHA1). 2. Privacy handled. 3. Sync/rebuild (JVM 19 required). 
 
-**Status**: Compiles cleanly. Test GPS track, Polyline, markers, camera, finish snapshot. Native .so strip warnings are expected (libs packaged as-is). iOS unchanged.
+**Status**: Compiles cleanly. 
 
-The tracking, GPS, Room, and foreground service logic are untouched. See `CurrentRunMap.android.kt`, `MapUtils.kt` for details.
+**Fixed in this update (from Gaode reference sample)**:
+- **White/blank map**: Added `MapProperties(isMyLocationEnabled = true, myLocationStyle = MyLocationStyle() with custom icon, colors, rotate type)` + `locationSource` + `myLocationButtonEnabled` to `GDMap`. This loads tiles, shows blue dot, and enables location.
+- **Location & running feature**: `locationSource` (implements `LocationSource`) + `LaunchedEffect` on `lastLocationPoint` calls `onLocationUpdate` with AMapLocation (syncs our TrackingManager pathPoints/speed to Gaode blue dot and camera). Matches reference `LocationTrackingViewModel` + `LocationTrackingRepository` (AMapLocationClient, MyLocationStyle, activate/deactivate, handleLocationChange).
+- **SHA1 mismatch prompt**: RunTrackApp now logs current SHA1 on start (update in Amap console if map white or no location; reference uses keystore.properties for signing).
+- **Map positioning button + address popup**: Added floating button (ic_location_marker) in CurrentRunMap Box. Click centers map (CameraUpdateFactory.newLatLngZoom) and shows AlertDialog with current address (lat/lng; reference uses RegeocodeSearch/PoiSearchV2 for full street address — extendable). Matches sample's myLocationButton + onMapClick patterns.
+- Permission/GPS dialog from reference can be added to `CurrentRunScreen.kt` if needed (already has commented LocationUtils checks; Manifest has permissions).
+
+Test: Grant location permission, start run — blue dot appears/follows, click positioning button for center + address popup, Polyline draws track, camera follows, finish snapshot works. If still white, check logged SHA1 vs Amap console and rebuild.
+
+The tracking, GPS, Room, and foreground service logic are untouched. See `CurrentRunMap.android.kt` (now includes reference patterns for button/address), `MapUtils.kt`, `DefaultLocationTrackingManager.kt`, RunTrackApp.kt for details. Reference folder `高德参考/gaode` (now in .gitignore) fully audited for location init, properties, client, button, and search.
 
 ## Project Status
 

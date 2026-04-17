@@ -19,6 +19,7 @@ class RunTrackApp : Application() {
         Timber.plant(Timber.DebugTree())
         // Set map privacy agreement for Gaode/OmniMap (must be called immediately after user agrees to privacy policy)
         GdMapUtils.setMapPrivacy(this, true)
+        logCurrentSHA1() // Prompt if SHA1 mismatch with Amap console key binding (from reference keystore)
         startKoin {
             androidContext(this@RunTrackApp)
             androidLogger()
@@ -27,4 +28,17 @@ class RunTrackApp : Application() {
         }
         notificationHelper.createNotificationChannel()
     }
-}
+
+    private fun logCurrentSHA1() {
+        try {
+            val signatures = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES).signatures
+            signatures?.forEach { signature ->
+                val md = java.security.MessageDigest.getInstance("SHA1")
+                md.update(signature.toByteArray())
+                val sha1 = md.digest().joinToString(":") { String.format("%02X", it) }
+                Timber.i("Current App SHA1: $sha1 - Update in Amap console (lbs.amap.com) if map is white or location fails")
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to get SHA1")
+        }
+    }

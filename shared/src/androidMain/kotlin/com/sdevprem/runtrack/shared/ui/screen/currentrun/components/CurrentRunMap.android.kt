@@ -31,14 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.util.fastForEach
 import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.LocationSource
+import com.amap.api.maps.LocationSource.OnLocationChangedListener
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.MyLocationStyle
+import com.amap.api.location.AMapLocation
 import com.melody.map.gd_compose.GDMap
 import com.melody.map.gd_compose.MapApplier
 import com.melody.map.gd_compose.model.GDMapComposable
 import com.melody.map.gd_compose.overlay.Marker
 import com.melody.map.gd_compose.overlay.Polyline
 import com.melody.map.gd_compose.overlay.rememberMarkerState
+import com.melody.map.gd_compose.poperties.MapProperties
 import com.melody.map.gd_compose.poperties.MapUiSettings
 import com.melody.map.gd_compose.position.rememberCameraPositionState
 import com.sdevprem.runtrack.shared.R
@@ -99,12 +104,61 @@ private fun Map(
             isScaleControlsEnabled = true,
             isScrollGesturesEnabled = true,
             isZoomGesturesEnabled = true,
-            isZoomEnabled = true
+            isZoomEnabled = true,
+            myLocationButtonEnabled = true
         )
     }
+
+    val mapProperties = remember {
+        MapProperties(
+            isMyLocationEnabled = true,
+            myLocationStyle = MyLocationStyle().apply {
+                // Custom blue dot using our existing marker (tint blue)
+                myLocationIcon(
+                    MapUtils.bitmapDescriptorFromVector(
+                        context = LocalContext.current,
+                        vectorResId = R.drawable.ic_location_marker,
+                        tint = Color.BLUE,
+                        sizeInPx = 48
+                    )
+                )
+                myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
+                strokeColor(Color.BLACK)
+                radiusFillColor(Color.argb(100, 0, 0, 180))
+                strokeWidth(0.1f)
+            }
+        )
+    }
+
     val cameraPositionState = rememberCameraPositionState()
     val lastLocationPoint by remember(pathPoints) {
         derivedStateOf { pathPoints.lasLocationPoint() }
+    }
+
+    var showAddressDialog by remember { mutableStateOf(false) }
+    var currentAddress by remember { mutableStateOf("") }
+
+    // LocationSource for Gaode blue dot + live location updates (sync with our tracking)
+    val locationSource = remember {
+        object : LocationSource {
+            private var listener: OnLocationChangedListener? = null
+            override fun activate(l: OnLocationChangedListener?) {
+                listener = l
+            }
+            override fun deactivate() {
+                listener = null
+            }
+            fun onLocationUpdate(latLng: LatLng, speed: Float = 0f) {
+                val amapLocation = AMapLocation("run-track").apply {
+                    latitude = latLng.latitude
+                    longitude = latLng.longitude
+                    speed = speed
+                    accuracy = 10f
+                    time = System.currentTimeMillis()
+                }
+                listener?.onLocationChanged(amapLocation)
+            }
+        }
     }
 
     LaunchedEffect(key1 = lastLocationPoint) {
@@ -113,27 +167,64 @@ private fun Map(
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(latLng, 15f)
             )
+            locationSource.onLocationUpdate(latLng, it.speedInMS)
         }
     }
 
-    GDMap(
-        modifier = Modifier
-            .fillMaxSize(),
-        uiSettings = mapUiSettings,
-        cameraPositionState = cameraPositionState,
-        onMapLoaded = onMapLoaded,
-    ) {
-        DrawPathPoints(pathPoints = pathPoints, isRunningFinished = isRunningFinished)
+    Box(modifier = Modifier.fillMaxSize()) {
+        GDMap(
+            modifier = Modifier.fillMaxSize(),
+            uiSettings = mapUiSettings,
+            properties = mapProperties,
+            cameraPositionState = cameraPositionState,
+            locationSource = locationSource,
+            onMapLoaded = onMapLoaded,
+        ) {
+            DrawPathPoints(pathPoints = pathPoints, isRunningFinished = isRunningFinished)
 
-        TakeScreenShot(
-            take = isRunningFinished,
-            mapCenter = mapCenter,
-            mapSize = mapSize,
-            pathPoints = pathPoints,
-            onSnapshot = onSnapshot
+            TakeScreenShot(
+                take = isRunningFinished,
+                mapCenter = mapCenter,
+                mapSize = mapSize,
+                pathPoints = pathPoints,
+                onSnapshot = onSnapshot
+            )
+        }
+
+        // Reference-inspired positioning button (click to locate + popup address)
+        FloatingActionButton(
+            onClick = {
+                lastLocationPoint?.let {
+                    val latLng = it.locationInfo.toLatLng()
+                    cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
+                    currentAddress = "当前位置:\n纬度: ${latLng.latitude}\n经度: ${latLng.longitude}\n(完整地址可集成RegeocodeSearch from reference)"
+                    showAddressDialog = true
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = vectorResource(Res.drawable.ic_location_marker), // or ic_run
+                contentDescription = "Locate",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+
+    if (showAddressDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddressDialog = false },
+            title = { Text("当前位置") },
+            text = { Text(currentAddress) },
+            confirmButton = {
+                TextButton(onClick = { showAddressDialog = false }) {
+                    Text("确定")
+                }
+            }
         )
     }
-}
 
 @GDMapComposable
 @Composable
