@@ -113,18 +113,17 @@ private fun Map(
         MapProperties(
             isMyLocationEnabled = true,
             myLocationStyle = MyLocationStyle().apply {
-                // Custom blue dot using our existing marker (tint blue)
                 myLocationIcon(
                     MapUtils.bitmapDescriptorFromVector(
                         context = LocalContext.current,
                         vectorResId = R.drawable.ic_location_marker,
-                        tint = Color.BLUE,
+                        tint = AndroidColor.BLUE,
                         sizeInPx = 48
                     )
                 )
                 myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
-                strokeColor(Color.BLACK)
-                radiusFillColor(Color.argb(100, 0, 0, 180))
+                strokeColor(AndroidColor.BLACK)
+                radiusFillColor(AndroidColor.argb(100, 0, 0, 180))
                 strokeWidth(0.1f)
             }
         )
@@ -161,13 +160,13 @@ private fun Map(
         }
     }
 
-    LaunchedEffect(key1 = lastLocationPoint) {
+    LaunchedEffect(lastLocationPoint) {
         lastLocationPoint?.let {
             val latLng = it.locationInfo.toLatLng()
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(latLng, 15f)
             )
-            locationSource.onLocationUpdate(latLng, it.speedInMS)
+            locationSource.onLocationUpdate(latLng, 0f)
         }
     }
 
@@ -225,6 +224,7 @@ private fun Map(
             }
         )
     }
+}
 
 @GDMapComposable
 @Composable
