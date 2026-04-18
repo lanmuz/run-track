@@ -91,7 +91,7 @@ actual fun Map(
             }
     ) {
         ShowMapLoadingProgressBar(!isMapLoaded)
-        Map(
+        RenderMapContent(
             pathPoints = pathPoints,
             isRunningFinished = isRunningFinished,
             currentSpeedInKMH = currentSpeedInKMH,
@@ -104,7 +104,7 @@ actual fun Map(
 }
 
 @Composable
-private fun Map(
+private fun RenderMapContent(
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
     currentSpeedInKMH: Float,
@@ -164,11 +164,11 @@ private fun Map(
             override fun deactivate() {
                 listener = null
             }
-            fun onLocationUpdate(latLng: LatLng, speed: Float = 0f) {
+            fun onLocationUpdate(latLng: LatLng, speedInMS: Float = 0f) {
                 val amapLocation = AMapLocation("run-track").apply {
                     latitude = latLng.latitude
                     longitude = latLng.longitude
-                    speed = speed
+                    this.speed = speedInMS
                     accuracy = 10f
                     time = System.currentTimeMillis()
                 }
@@ -183,7 +183,10 @@ private fun Map(
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(latLng, 15f)
             )
-            locationSource.onLocationUpdate(latLng, currentSpeedInKMH / 3.6f)
+            locationSource.onLocationUpdate(
+                latLng = latLng,
+                speedInMS = currentSpeedInKMH / 3.6f
+            )
         }
     }
 
