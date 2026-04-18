@@ -43,3 +43,4 @@ class RunTrackApp : Application() {
             Timber.w(e, "Failed to get SHA1")
         }
     }
+}

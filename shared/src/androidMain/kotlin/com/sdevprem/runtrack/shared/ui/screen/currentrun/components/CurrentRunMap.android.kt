@@ -324,11 +324,12 @@ private fun DrawPathPoints(
     }
 
     //add the last path points
-    if (locationInfoList.isNotEmpty())
+    if (locationInfoList.isNotEmpty()) {
         Polyline(
             points = locationInfoList.map { it.toGcjLatLng(context) },
             color = md_theme_light_primary
         )
+    }
 
     val currentPosIcon = remember(isRunningFinished) {
         if (isRunningFinished.not()) {
@@ -389,8 +390,7 @@ private fun DrawPathPoints(
             icon = firstLocationIcon,
             state = rememberMarkerState(position = it.locationInfo.toGcjLatLng(context)),
             anchor = flagOffset,
-
-            )
+        )
     }
 }
 
