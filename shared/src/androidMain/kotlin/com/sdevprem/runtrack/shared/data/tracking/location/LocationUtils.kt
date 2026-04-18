@@ -1,7 +1,9 @@
 package com.sdevprem.runtrack.shared.data.tracking.location
 
 import android.app.Activity
+import android.content.Intent
 import android.content.IntentSender
+import android.provider.Settings
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -26,17 +28,24 @@ object LocationUtils {
             .addLocationRequest(locationRequest)
         val client: SettingsClient = LocationServices.getSettingsClient(activity)
 
-        client.checkLocationSettings(builder.build())
-            .addOnFailureListener { exception ->
-                if (exception is ResolvableApiException) {
-                    try {
-                        exception.startResolutionForResult(
-                            activity,
-                            LOCATION_ENABLE_REQUEST_CODE
-                        )
-                    } catch (_: IntentSender.SendIntentException) {
+        runCatching {
+            client.checkLocationSettings(builder.build())
+                .addOnFailureListener { exception ->
+                    if (exception is ResolvableApiException) {
+                        try {
+                            exception.startResolutionForResult(
+                                activity,
+                                LOCATION_ENABLE_REQUEST_CODE
+                            )
+                        } catch (_: IntentSender.SendIntentException) {
+                            activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                        }
+                    } else {
+                        activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     }
                 }
-            }
+        }.onFailure {
+            activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        }
     }
 }

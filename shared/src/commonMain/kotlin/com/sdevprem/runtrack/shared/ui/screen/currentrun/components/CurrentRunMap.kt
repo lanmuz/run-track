@@ -9,5 +9,6 @@ expect fun Map(
     modifier: Modifier = Modifier,
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
+    currentSpeedInKMH: Float,
     onSnapshot: (ByteArray) -> Unit,
 )

@@ -62,6 +62,7 @@ fun CurrentRunScreen(
         Map(
             pathPoints = runState.currentRunState.pathPoints,
             isRunningFinished = isRunningFinished,
+            currentSpeedInKMH = runState.currentRunState.speedInKMH,
         ) {
             viewModel.finishRun(it)
             navigateUp()

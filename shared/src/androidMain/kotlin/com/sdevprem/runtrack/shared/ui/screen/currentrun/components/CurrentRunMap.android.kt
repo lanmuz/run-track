@@ -2,22 +2,31 @@
 
 package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
 
+import android.location.Geocoder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,15 +37,13 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.util.fastForEach
+import com.amap.api.location.AMapLocation
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.LocationSource
 import com.amap.api.maps.LocationSource.OnLocationChangedListener
-import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.MyLocationStyle
-import com.amap.api.location.AMapLocation
 import com.melody.map.gd_compose.GDMap
 import com.melody.map.gd_compose.MapApplier
 import com.melody.map.gd_compose.model.GDMapComposable
@@ -47,7 +54,7 @@ import com.melody.map.gd_compose.poperties.MapProperties
 import com.melody.map.gd_compose.poperties.MapUiSettings
 import com.melody.map.gd_compose.position.rememberCameraPositionState
 import com.sdevprem.runtrack.shared.R
-import com.sdevprem.runtrack.shared.common.extension.toLatLng
+import com.sdevprem.runtrack.shared.common.extension.toGcjLatLng
 import com.sdevprem.runtrack.shared.domain.tracking.model.LocationInfo
 import com.sdevprem.runtrack.shared.domain.tracking.model.PathPoint
 import com.sdevprem.runtrack.shared.domain.tracking.model.firstLocationPoint
@@ -55,12 +62,19 @@ import com.sdevprem.runtrack.shared.domain.tracking.model.lasLocationPoint
 import com.sdevprem.runtrack.shared.ui.theme.RTColor
 import com.sdevprem.runtrack.shared.ui.theme.md_theme_light_primary
 import com.sdevprem.runtrack.shared.ui.utils.MapUtils
+import org.jetbrains.compose.resources.vectorResource
+import runtrack.shared.generated.resources.Res
+import runtrack.shared.generated.resources.ic_location_marker
+import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 actual fun Map(
     modifier: Modifier,
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
+    currentSpeedInKMH: Float,
     onSnapshot: (ByteArray) -> Unit,
 ) {
     var mapSize by remember { mutableStateOf(Size(0f, 0f)) }
@@ -80,6 +94,7 @@ actual fun Map(
         Map(
             pathPoints = pathPoints,
             isRunningFinished = isRunningFinished,
+            currentSpeedInKMH = currentSpeedInKMH,
             mapCenter = mapCenter,
             mapSize = mapSize,
             onMapLoaded = { isMapLoaded = true },
@@ -92,11 +107,13 @@ actual fun Map(
 private fun Map(
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
+    currentSpeedInKMH: Float,
     mapCenter: Offset,
     mapSize: Size,
     onMapLoaded: () -> Unit,
     onSnapshot: (ByteArray) -> Unit,
 ) {
+    val context = LocalContext.current
 
     val mapUiSettings = remember {
         MapUiSettings(
@@ -115,15 +132,15 @@ private fun Map(
             myLocationStyle = MyLocationStyle().apply {
                 myLocationIcon(
                     MapUtils.bitmapDescriptorFromVector(
-                        context = LocalContext.current,
+                        context = context,
                         vectorResId = R.drawable.ic_location_marker,
-                        tint = AndroidColor.BLUE,
+                        tint = Color.Blue.toArgb(),
                         sizeInPx = 48
                     )
                 )
                 myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
-                strokeColor(AndroidColor.BLACK)
-                radiusFillColor(AndroidColor.argb(100, 0, 0, 180))
+                strokeColor(Color.Black.toArgb())
+                radiusFillColor(Color(0x640000B4).toArgb())
                 strokeWidth(0.1f)
             }
         )
@@ -162,11 +179,11 @@ private fun Map(
 
     LaunchedEffect(lastLocationPoint) {
         lastLocationPoint?.let {
-            val latLng = it.locationInfo.toLatLng()
+            val latLng = it.locationInfo.toGcjLatLng(context)
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(latLng, 15f)
             )
-            locationSource.onLocationUpdate(latLng, 0f)
+            locationSource.onLocationUpdate(latLng, currentSpeedInKMH / 3.6f)
         }
     }
 
@@ -183,6 +200,7 @@ private fun Map(
 
             TakeScreenShot(
                 take = isRunningFinished,
+                context = context,
                 mapCenter = mapCenter,
                 mapSize = mapSize,
                 pathPoints = pathPoints,
@@ -194,9 +212,9 @@ private fun Map(
         FloatingActionButton(
             onClick = {
                 lastLocationPoint?.let {
-                    val latLng = it.locationInfo.toLatLng()
+                    val latLng = it.locationInfo.toGcjLatLng(context)
                     cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
-                    currentAddress = "当前位置:\n纬度: ${latLng.latitude}\n经度: ${latLng.longitude}\n(完整地址可集成RegeocodeSearch from reference)"
+                    currentAddress = "正在解析地址..."
                     showAddressDialog = true
                 }
             },
@@ -224,12 +242,20 @@ private fun Map(
             }
         )
     }
+
+    LaunchedEffect(showAddressDialog, lastLocationPoint) {
+        if (!showAddressDialog) return@LaunchedEffect
+        val point = lastLocationPoint ?: return@LaunchedEffect
+        val latLng = point.locationInfo.toGcjLatLng(context)
+        currentAddress = resolveAddress(context, latLng)
+    }
 }
 
 @GDMapComposable
 @Composable
 private fun TakeScreenShot(
     take: Boolean,
+    context: android.content.Context,
     mapCenter: Offset,
     mapSize: Size,
     pathPoints: List<PathPoint>,
@@ -241,6 +267,7 @@ private fun TakeScreenShot(
     LaunchedEffect(take, mapApplier, mapCenter, mapSize) {
         if (take && mapApplier?.map != null) {
             MapUtils.takeSnapshot(
+                context = context,
                 mapApplier.map,
                 pathPoints,
                 mapCenter,
@@ -274,7 +301,7 @@ private fun DrawPathPoints(
 
     LaunchedEffect(key1 = lastLocationPoint) {
         pathPoints.lasLocationPoint()?.let {
-            val latLng = it.locationInfo.toLatLng()
+            val latLng = it.locationInfo.toGcjLatLng(context)
             lastMarkerState.position = latLng
             largeLastMarkerState.position = latLng
         }
@@ -284,7 +311,7 @@ private fun DrawPathPoints(
     pathPoints.fastForEach { pathPoint ->
         if (pathPoint is PathPoint.EmptyLocationPoint) {
             Polyline(
-                points = locationInfoList.map { it.toLatLng() },
+                points = locationInfoList.map { it.toGcjLatLng(context) },
                 color = md_theme_light_primary,
             )
             locationInfoList.clear()
@@ -296,7 +323,7 @@ private fun DrawPathPoints(
     //add the last path points
     if (locationInfoList.isNotEmpty())
         Polyline(
-            points = locationInfoList.map { it.toLatLng() },
+            points = locationInfoList.map { it.toGcjLatLng(context) },
             color = md_theme_light_primary
         )
 
@@ -318,14 +345,16 @@ private fun DrawPathPoints(
         }
     }
     val currentPosLargeIcon = remember(isRunningFinished) {
-        if (isRunningFinished) return@remember null
-
-        MapUtils.bitmapDescriptorFromVector(
-            context = context,
-            vectorResId = R.drawable.ic_circle,
-            tint = md_theme_light_primary.copy(alpha = 0.4f).toArgb(),
-            sizeInPx = largeLocationIconSize
-        )
+        if (isRunningFinished) {
+            null
+        } else {
+            MapUtils.bitmapDescriptorFromVector(
+                context = context,
+                vectorResId = R.drawable.ic_circle,
+                tint = md_theme_light_primary.copy(alpha = 0.4f).toArgb(),
+                sizeInPx = largeLocationIconSize
+            )
+        }
     }
 
     currentPosLargeIcon?.let {
@@ -355,11 +384,23 @@ private fun DrawPathPoints(
         }
         Marker(
             icon = firstLocationIcon,
-            state = rememberMarkerState(position = it.locationInfo.toLatLng()),
+            state = rememberMarkerState(position = it.locationInfo.toGcjLatLng(context)),
             anchor = flagOffset,
 
             )
     }
+}
+
+private suspend fun resolveAddress(
+    context: android.content.Context,
+    latLng: LatLng
+): String = withContext(Dispatchers.IO) {
+    runCatching {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+        val line = addresses?.firstOrNull()?.getAddressLine(0)?.takeIf { it.isNotBlank() }
+        line ?: "当前位置:\n纬度: ${latLng.latitude}\n经度: ${latLng.longitude}"
+    }.getOrDefault("当前位置:\n纬度: ${latLng.latitude}\n经度: ${latLng.longitude}")
 }
 
 @Composable

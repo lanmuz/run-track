@@ -12,7 +12,7 @@ import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.model.BitmapDescriptor
 import com.amap.api.maps.model.BitmapDescriptorFactory
 import com.amap.api.maps.model.LatLngBounds
-import com.sdevprem.runtrack.shared.common.extension.toLatLng
+import com.sdevprem.runtrack.shared.common.extension.toGcjLatLng
 import com.sdevprem.runtrack.shared.domain.tracking.model.PathPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,16 +23,19 @@ object MapUtils {
     private const val MAP_SNAPSHOT_DELAY = 500L
 
     suspend fun takeSnapshot(
+        context: Context,
         map: AMap,
         pathPoints: List<PathPoint>,
         mapCenter: Offset,
         onSnapshot: (ByteArray) -> Unit,
         snapshotSideLength: Float
     ) {
+        val locationPoints = pathPoints.filterIsInstance<PathPoint.LocationPoint>()
+        if (locationPoints.isEmpty()) return
+
         val boundsBuilder = LatLngBounds.Builder()
-        pathPoints.forEach {
-            if (it is PathPoint.LocationPoint)
-                boundsBuilder.include(it.locationInfo.toLatLng())
+        locationPoints.forEach {
+            boundsBuilder.include(it.locationInfo.toGcjLatLng(context))
         }
         map.moveCamera(
             CameraUpdateFactory
@@ -66,13 +69,12 @@ object MapUtils {
 
         bitmap?.let {
             //crop to get a square image which fits the user path
-            val croppedBitmap = Bitmap.createBitmap(
-                it,
-                startOffset.x.toInt(), //start x
-                startOffset.y.toInt(), //start y
-                snapshotSideLength.toInt(), //width
-                snapshotSideLength.toInt() //height
-            )
+            val side = snapshotSideLength.toInt().coerceAtLeast(1)
+            val safeX = startOffset.x.toInt().coerceIn(0, (it.width - 1).coerceAtLeast(0))
+            val safeY = startOffset.y.toInt().coerceIn(0, (it.height - 1).coerceAtLeast(0))
+            val safeWidth = side.coerceAtMost(it.width - safeX).coerceAtLeast(1)
+            val safeHeight = side.coerceAtMost(it.height - safeY).coerceAtLeast(1)
+            val croppedBitmap = Bitmap.createBitmap(it, safeX, safeY, safeWidth, safeHeight)
             onSnapshot(croppedBitmap.toByteArray())
         }
     }

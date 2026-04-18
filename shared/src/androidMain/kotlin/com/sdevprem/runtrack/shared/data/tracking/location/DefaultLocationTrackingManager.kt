@@ -2,6 +2,9 @@ package com.sdevprem.runtrack.shared.data.tracking.location
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -33,21 +36,67 @@ class DefaultLocationTrackingManager(
             )
         }
     }
+    private val locationManager by lazy {
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
+    private val platformLocationListener = LocationListener { location ->
+        locationCallback?.onLocationUpdate(listOf(location.toTrackingInfo()))
+    }
+    private var usingPlatformLocationFallback = false
 
     override fun setCallback(locationCallback: LocationTrackingManager.LocationCallback) {
         if (/*context.hasLocationPermission()*/ true) { //todo: add permission check
             this.locationCallback = locationCallback
-            fusedLocationProviderClient.requestLocationUpdates(
-                locationRequest,
-                gLocationCallback,
-                Looper.getMainLooper()
-            )
+            val startedWithFused = runCatching {
+                fusedLocationProviderClient.requestLocationUpdates(
+                    locationRequest,
+                    gLocationCallback,
+                    Looper.getMainLooper()
+                )
+            }.isSuccess
+            if (!startedWithFused) {
+                startPlatformLocationUpdates()
+            }
         }
     }
 
     override fun removeCallback() {
         this.locationCallback = null
         fusedLocationProviderClient.removeLocationUpdates(gLocationCallback)
+        if (usingPlatformLocationFallback) {
+            runCatching { locationManager.removeUpdates(platformLocationListener) }
+            usingPlatformLocationFallback = false
+        }
     }
 
+    @SuppressLint("MissingPermission")
+    private fun startPlatformLocationUpdates() {
+        usingPlatformLocationFallback = true
+        val minTimeMs = locationRequest.intervalMillis
+        runCatching {
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                minTimeMs,
+                0f,
+                platformLocationListener,
+                Looper.getMainLooper()
+            )
+        }
+        runCatching {
+            locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER,
+                minTimeMs,
+                0f,
+                platformLocationListener,
+                Looper.getMainLooper()
+            )
+        }
+    }
+
+    private fun Location.toTrackingInfo(): LocationTrackingInfo {
+        return LocationTrackingInfo(
+            locationInfo = LocationInfo(latitude, longitude),
+            speedInMS = speed
+        )
+    }
 }

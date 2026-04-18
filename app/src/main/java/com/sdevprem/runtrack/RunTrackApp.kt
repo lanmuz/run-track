@@ -1,6 +1,7 @@
 package com.sdevprem.runtrack
 
 import android.app.Application
+import android.content.pm.PackageManager
 import com.melody.map.gd_compose.utils.MapUtils as GdMapUtils
 import com.sdevprem.runtrack.shared.background.notification.TrackingNotificationHelper
 import com.sdevprem.runtrack.shared.di.AppModule

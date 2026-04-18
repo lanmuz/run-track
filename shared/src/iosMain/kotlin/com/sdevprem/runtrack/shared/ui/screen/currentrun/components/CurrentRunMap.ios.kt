@@ -50,6 +50,7 @@ actual fun Map(
     modifier: Modifier,
     pathPoints: List<PathPoint>,
     isRunningFinished: Boolean,
+    currentSpeedInKMH: Float,
     onSnapshot: (ByteArray) -> Unit
 ) {
     var isMapLoaded by remember { mutableStateOf(false) }
