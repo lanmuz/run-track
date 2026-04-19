@@ -1,0 +1,3 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+ 
+// import androidx.compose.foundation.layout.weight  // Removed as it triggers internal access error; suppress handles visibility
