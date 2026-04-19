@@ -2,9 +2,12 @@ package com.sdevprem.runtrack.shared.ui.screen.currentrun
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,28 +61,36 @@ fun CurrentRunScreen(
         shouldShowRunningCard = true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Map(
-            pathPoints = runState.currentRunState.pathPoints,
-            isRunningFinished = isRunningFinished,
-            currentSpeedInKMH = runState.currentRunState.speedInKMH,
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 地图占上方剩余空间，与下方跑步面板上下排列、不重叠
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
-            viewModel.finishRun(it)
-            navigateUp()
+            Map(
+                modifier = Modifier.fillMaxSize(),
+                pathPoints = runState.currentRunState.pathPoints,
+                isRunningFinished = isRunningFinished,
+                currentSpeedInKMH = runState.currentRunState.speedInKMH,
+            ) {
+                viewModel.finishRun(it)
+                navigateUp()
+            }
+            TopBar(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(24.dp),
+                onNavigateUp = navigateUp
+            )
         }
-        TopBar(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(24.dp),
-            onNavigateUp = navigateUp
-        )
         ComposeUtils.SlideUpAnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
+            modifier = Modifier.fillMaxWidth(),
             visible = shouldShowRunningCard
         ) {
             CurrentRunStatsCard(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(vertical = 16.dp, horizontal = 24.dp),
                 onPlayPauseButtonClick = viewModel::playPauseTracking,
                 runState = runState,
@@ -87,7 +98,6 @@ fun CurrentRunScreen(
                 onFinish = { isRunningFinished = true }
             )
         }
-
     }
 }
 

@@ -23,6 +23,7 @@ import com.sdevprem.runtrack.shared.common.extension.hasLocationPermission
 import com.sdevprem.runtrack.shared.common.extension.openAppSetting
 import com.sdevprem.runtrack.shared.common.utils.PermissionUtils
 import com.sdevprem.runtrack.shared.data.tracking.location.LocationUtils
+import com.sdevprem.runtrack.shared.diagnostics.AmapDiagnosticsDialog
 import com.sdevprem.runtrack.shared.ui.component.LocationPermissionRequestDialog
 import com.sdevprem.runtrack.shared.ui.screen.main.MainScreen
 import com.sdevprem.runtrack.shared.ui.theme.AppTheme
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 PermissionRequester()
+                AmapDiagnosticsDialog()
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

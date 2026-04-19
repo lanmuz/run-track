@@ -6,6 +6,7 @@ import com.melody.map.gd_compose.utils.MapUtils as GdMapUtils
 import com.sdevprem.runtrack.shared.background.notification.TrackingNotificationHelper
 import com.sdevprem.runtrack.shared.di.AppModule
 import com.sdevprem.runtrack.shared.di.PlatformModule
+import com.sdevprem.runtrack.shared.diagnostics.buildAmapDiagnosticReport
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -21,6 +22,7 @@ class RunTrackApp : Application() {
         // Set map privacy agreement for Gaode/OmniMap (must be called immediately after user agrees to privacy policy)
         GdMapUtils.setMapPrivacy(this, true)
         logCurrentSHA1() // Prompt if SHA1 mismatch with Amap console key binding (from reference keystore)
+        logAmapDiagnostics()
         startKoin {
             androidContext(this@RunTrackApp)
             androidLogger()
@@ -41,6 +43,16 @@ class RunTrackApp : Application() {
             }
         } catch (e: Exception) {
             Timber.w(e, "Failed to get SHA1")
+        }
+    }
+
+    private fun logAmapDiagnostics() {
+        runCatching {
+            val report = buildAmapDiagnosticReport(this)
+            val tag = if (report.hasError) "AmapDiagnostics ERROR" else "AmapDiagnostics OK"
+            Timber.i("$tag\n${report.lines.joinToString("\n")}")
+        }.onFailure { e ->
+            Timber.e(e, "高德自检失败（不应静默）")
         }
     }
 }
