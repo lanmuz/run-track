@@ -10,7 +10,7 @@ import java.security.MessageDigest
  * 若你更换签名，请同步更新此处或改为从配置读取。
  */
 private const val EXPECTED_DEBUG_SHA1 =
-    "85:27:54:98:89:11:17:94:71:61:2A:BE:E4:9D:6E:07:83:F9:EA:6F"
+    "05:88:F3:81:2E:4F:85:0D:79:74:DD:6A:93:CC:FD:BE:EC:12:44:E1"
 
 /** 你在工单中声明应生效的 Key（与 Manifest 合并结果对比，便于确认是否“真用上”）。 */
 private const val USER_SUPPLIED_EXPECTED_AMAP_KEY =

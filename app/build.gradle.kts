@@ -13,12 +13,16 @@ android {
     namespace = "com.sdevprem.runtrack"
     compileSdk = 36
 
+    def mapsApiKey = project.findProperty("MAPS_API_KEY") ?: "CI_PLACEHOLDER"
+
+
+
     defaultConfig {
         applicationId = "com.sdevprem.runtrack"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true  // 可选，方便运行时读取
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

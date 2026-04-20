@@ -50,15 +50,31 @@ fun AmapDiagnosticsDialog() {
             },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(
-                        text = r.lines.joinToString("\n"),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    // 关键修改：包裹 SelectionContainer 使文本可复制
+                    SelectionContainer {
+                        Text(
+                            text = reportText,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { dismissed = true }) {
                     Text("知道了")
+                }
+            },
+            // 新增 DismissButton：一键复制整个报告（推荐）
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(reportText))
+                        // 可选：显示 Toast 提示已复制
+                        // Toast.makeText(context, "报告已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                        dismissed = true
+                    }
+                ) {
+                    Text("复制报告")
                 }
             }
         )
