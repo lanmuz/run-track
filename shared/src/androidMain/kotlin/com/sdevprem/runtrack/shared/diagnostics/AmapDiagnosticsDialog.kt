@@ -2,6 +2,7 @@ package com.sdevprem.runtrack.shared.diagnostics
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -15,7 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -26,10 +29,10 @@ import kotlinx.coroutines.withContext
 @Composable
 fun AmapDiagnosticsDialog() {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     var report by remember { mutableStateOf<AmapDiagnosticReport?>(null) }
     var readyToShow by remember { mutableStateOf(false) }
     var dismissed by rememberSaveable { mutableStateOf(false) }
-
     LaunchedEffect(Unit) {
         delay(900)
         report = withContext(Dispatchers.Default) {
@@ -37,9 +40,10 @@ fun AmapDiagnosticsDialog() {
         }
         readyToShow = true
     }
-
     if (readyToShow && !dismissed && report != null) {
         val r = report!!
+        val reportText = r.lines.joinToString("\n")
+        
         AlertDialog(
             onDismissRequest = { dismissed = true },
             title = {
@@ -50,7 +54,6 @@ fun AmapDiagnosticsDialog() {
             },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    // 关键修改：包裹 SelectionContainer 使文本可复制
                     SelectionContainer {
                         Text(
                             text = reportText,
@@ -64,13 +67,11 @@ fun AmapDiagnosticsDialog() {
                     Text("知道了")
                 }
             },
-            // 新增 DismissButton：一键复制整个报告（推荐）
             dismissButton = {
                 TextButton(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(reportText))
-                        // 可选：显示 Toast 提示已复制
-                        // Toast.makeText(context, "报告已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "报告已复制到剪贴板", Toast.LENGTH_SHORT).show() // 如需可取消注释
                         dismissed = true
                     }
                 ) {

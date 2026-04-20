@@ -13,8 +13,7 @@ android {
     namespace = "com.sdevprem.runtrack"
     compileSdk = 36
 
-    def mapsApiKey = project.findProperty("MAPS_API_KEY") ?: "CI_PLACEHOLDER"
-
+    project.ext.set("MAPS_API_KEY", project.findProperty("MAPS_API_KEY") ?: "CI_PLACEHOLDER")
 
 
     defaultConfig {
