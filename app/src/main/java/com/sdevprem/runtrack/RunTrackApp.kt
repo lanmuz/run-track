@@ -31,7 +31,7 @@ class RunTrackApp : Application() {
         }
         notificationHelper.createNotificationChannel()
     }
-
+    @Suppress("DEPRECATION")
     private fun logCurrentSHA1() {
         try {
             val signatures = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES).signatures
