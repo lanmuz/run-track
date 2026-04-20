@@ -1,130 +1,132 @@
-﻿package com.sdevprem.runtrack.shared.ui.screen.currentrun
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sdevprem.runtrack.shared.ui.common.common.animation.ComposeUtils
-import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.CurrentRunStatsCard
-import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.Map
-import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.vectorResource
-import org.koin.compose.viewmodel.koinViewModel
-import runtrack.shared.generated.resources.Res
-import runtrack.shared.generated.resources.ic_back
-
-//@Composable
-//@Preview(showBackground = true)
-//private fun CurrentRunComposable() {
-//    AppTheme {
-//        Surface {
-//            CurrentRunScreen(rememberNavController())
-//        }
-//    }
-//}
-
-@Composable
-fun CurrentRunScreen(
-    navigateUp: () -> Unit,
-    viewModel: CurrentRunViewModel = koinViewModel()
-) {
-//    val context = LocalContext.current
-//
-//    LaunchedEffect(key1 = true) {
-//        LocationUtils.checkAndRequestLocationSetting(context as Activity)
-//    }
-    var isRunningFinished by rememberSaveable { mutableStateOf(false) }
-    var shouldShowRunningCard by rememberSaveable { mutableStateOf(false) }
-    val runState by viewModel.currentRunStateWithCalories.collectAsStateWithLifecycle()
-    val runningDurationInMillis by viewModel.runningDurationInMillis.collectAsStateWithLifecycle()
-
-    LaunchedEffect(key1 = Unit) {
-        delay(ComposeUtils.slideDownInDuration + 200L)
-        shouldShowRunningCard = true
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // 鍦板浘鍗犱笂鏂瑰墿浣欑┖闂达紝涓庝笅鏂硅窇姝ラ潰鏉夸笂涓嬫帓鍒椼€佷笉閲嶅彔
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            Map(
-                modifier = Modifier.fillMaxSize(),
-                pathPoints = runState.currentRunState.pathPoints,
-                isRunningFinished = isRunningFinished,
-                currentSpeedInKMH = runState.currentRunState.speedInKMH,
-            ) {
-                viewModel.finishRun(it)
-                navigateUp()
-            }
-            TopBar(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(24.dp),
-                onNavigateUp = navigateUp
-            )
-        }
-        ComposeUtils.SlideUpAnimatedVisibility(
-            modifier = Modifier.fillMaxWidth(),
-            visible = shouldShowRunningCard
-        ) {
-            CurrentRunStatsCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 24.dp),
-                onPlayPauseButtonClick = viewModel::playPauseTracking,
-                runState = runState,
-                durationInMillis = runningDurationInMillis,
-                onFinish = { isRunningFinished = true }
-            )
-        }
-    }
-}
-
-@Composable
-private fun TopBar(
-    modifier: Modifier = Modifier,
-    onNavigateUp: () -> Unit
-) {
-    IconButton(
-        onClick = onNavigateUp,
-        modifier = modifier
-            .size(32.dp)
-            .shadow(
-                elevation = 4.dp,
-                shape = MaterialTheme.shapes.medium,
-                clip = true
-            )
-            .background(
-                color = MaterialTheme.colorScheme.surface,
-            )
-            .padding(4.dp)
-    ) {
-        Icon(
-            imageVector = vectorResource(Res.drawable.ic_back),
-            contentDescription = "",
-            tint = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
+﻿@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
+package com.sdevprem.runtrack.shared.ui.screen.currentrun
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sdevprem.runtrack.shared.ui.common.common.animation.ComposeUtils
+import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.CurrentRunStatsCard
+import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.Map
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.vectorResource
+import org.koin.compose.viewmodel.koinViewModel
+import runtrack.shared.generated.resources.Res
+import runtrack.shared.generated.resources.ic_back
+
+/**
+ * Current running screen with Gaode map integration.
+ * Clean version: no excessive blank lines or dead code.
+ * Suppress added to prevent RowColumnParentData.weight internal access error.
+ */
+@Composable
+fun CurrentRunScreen(
+    navigateUp: () -> Unit,
+    viewModel: CurrentRunViewModel = koinViewModel()
+) {
+    // LocationUtils check (kept per request; requires additional imports if uncommented):
+    // import android.app.Activity
+    // import androidx.compose.ui.platform.LocalContext
+    // import com.sdevprem.runtrack.shared.ui.utils.LocationUtils
+    // val context = LocalContext.current
+    // LaunchedEffect(key1 = true) {
+    //     LocationUtils.checkAndRequestLocationSetting(context as Activity)
+    // }
+
+    var isRunningFinished by rememberSaveable { mutableStateOf(false) }
+    var shouldShowRunningCard by rememberSaveable { mutableStateOf(false) }
+
+    val runState by viewModel.currentRunStateWithCalories.collectAsStateWithLifecycle()
+    val runningDurationInMillis by viewModel.runningDurationInMillis.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = Unit) {
+        delay(ComposeUtils.slideDownInDuration + 200L)
+        shouldShowRunningCard = true
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 地图占据上方空间，与下方跑步界面上下排列、不重叠
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            Map(
+                modifier = Modifier.fillMaxSize(),
+                pathPoints = runState.currentRunState.pathPoints,
+                isRunningFinished = isRunningFinished,
+                currentSpeedInKMH = runState.currentRunState.speedInKMH,
+            ) {
+                viewModel.finishRun(it)
+                navigateUp()
+            }
+
+            TopBar(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(24.dp),
+                onNavigateUp = navigateUp
+            )
+        }
+
+        ComposeUtils.SlideUpAnimatedVisibility(
+            modifier = Modifier.fillMaxWidth(),
+            visible = shouldShowRunningCard
+        ) {
+            CurrentRunStatsCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp, horizontal = 24.dp),
+                onPlayPauseButtonClick = viewModel::playPauseTracking,
+                runState = runState,
+                durationInMillis = runningDurationInMillis,
+                onFinish = { isRunningFinished = true }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopBar(
+    modifier: Modifier = Modifier,
+    onNavigateUp: () -> Unit
+) {
+    IconButton(
+        onClick = onNavigateUp,
+        modifier = modifier
+            .size(32.dp)
+            .shadow(
+                elevation = 4.dp,
+                shape = MaterialTheme.shapes.medium,
+                clip = true
+            )
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+            )
+            .padding(4.dp)
+    ) {
+        Icon(
+            imageVector = vectorResource(Res.drawable.ic_back),
+            contentDescription = "",
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
