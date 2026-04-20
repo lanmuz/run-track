@@ -1,5 +1,6 @@
 package com.sdevprem.runtrack.shared.ui.screen.main
 
+import androidx.compose.foundation.background
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalAnimationApi

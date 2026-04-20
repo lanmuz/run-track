@@ -5,6 +5,10 @@ Jetpack Compose, MVVM architecture, and **OmniMap-Compose (Gaode/高德地图)**
 track their running activities with real-time GPS, displaying routes on an interactive map
 (Polyline + Markers) while storing statistics using Room. (Google Maps replaced for better China support and simpler Compose integration.)
 
+项目背景关联：这是从 run-track (kmping 分支) 移植并替换 Google Maps 为 高德地图 (Gaode/OmniMap-Compose) 的修改。核心变更集中在 CurrentRunScreen.kt、CurrentRunMap.android.kt（实际实现为 common + actual 的 Map composable，使用 GDMap、Polyline、Marker、MapProperties、MyLocationStyle 等）、MapUtils.kt、AmapDiagnostics.kt 以及相关 extension (toGcjLatLng、LocationInfoExt.kt)。
+
+Gaode 集成引入了大量新的 Compose 注解 (@GDMapComposable)、runtime API (currentComposer.applier as MapApplier) 和 Android-specific location source，导致对 foundation/material 依赖的敏感度更高。
+
 ## Features
 1. Live tracking of running activity using GPS.
 2. Tracking of user's running path in Map using OmniMap-Compose (GDMap) with Polyline, Markers, camera follow, and finish snapshot.
