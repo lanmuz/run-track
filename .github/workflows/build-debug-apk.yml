@@ -1,4 +1,4 @@
-name: Build Debug APK
+﻿name: Build Debug APK
 
 on:
   push:
@@ -32,6 +32,26 @@ jobs:
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug
+
+    - name: Print Signing SHA1
+      run: |
+        echo "=== Build-time Signing SHA1 (Debug Certificate) ==="
+        echo "Expected from AmapDiagnostics.kt:"
+        grep -A 3 'EXPECTED_DEBUG_SHA1' shared/src/androidMain/kotlin/com/sdevprem/runtrack/shared/diagnostics/AmapDiagnostics.kt || echo "SHA1 constant not found"
+        echo ""
+        echo "Computed from debug keystore:"
+        mkdir -p ~/.android
+        if [ ! -f ~/.android/debug.keystore ]; then
+          echo "Generating debug keystore..."
+          keytool -genkey -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" -noprompt 2>/dev/null || true
+        fi
+        keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+          -storepass android 2>/dev/null | grep -E "(SHA1|SHA-1|Alias name):" || echo "SHA1 computation failed (check Android SDK setup)"
+        echo "=== End of SHA1 info ==="
+        echo ""
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4

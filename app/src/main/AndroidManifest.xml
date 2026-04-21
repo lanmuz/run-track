@@ -39,7 +39,7 @@
 
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="${MAPS_API_KEY}" />
+            android:value="f7ed794f43e9f49b9ff09f50b6d2a0b4" />
 
         <service
             android:name=".shared.background.tracking.service.TrackingService"
