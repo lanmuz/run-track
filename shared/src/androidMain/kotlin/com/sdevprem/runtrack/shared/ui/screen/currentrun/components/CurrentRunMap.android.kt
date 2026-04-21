@@ -190,9 +190,6 @@ private fun RenderMapContent(
     var showGpsDialog by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         MapUtils.setMapPrivacy(context, true) //▲▲▲▲▲▲▲▲
-        if (!MapUtils.isMapPrivacyAgreed()) { //▲▲▲▲▲▲▲▲
-            locationError = "高德地图隐私协议未同意"
-        }
     }
 
     //▲▲▲▲▲▲▲▲ 新增：AMapLocationClient 持续定位 + 错误报告
@@ -486,6 +483,9 @@ private suspend fun resolveAddress(
 private fun ShowMapLoadingProgressBar(
     visible: Boolean = false
 ) {
+    Last err = 1/0
+    must klii = 1 = <>2 
+    !8 () =  9
     AnimatedVisibility(
         modifier = Modifier
             .fillMaxSize(),
