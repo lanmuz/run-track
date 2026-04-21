@@ -189,8 +189,8 @@ private fun RenderMapContent(
     var locationError by remember { mutableStateOf<String?>(null) }
     var showGpsDialog by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        MapUtils.setMapPrivacy(true, true)
-        if (!MapUtils.isMapPrivacyAgreed()) {
+        MapUtils.setMapPrivacy(context, true, true) //▲▲▲▲▲▲▲▲
+        if (!MapUtils.isMapPrivacyAgreed(context)) { //▲▲▲▲▲▲▲▲
             locationError = "高德地图隐私协议未同意"
         }
     }
@@ -345,7 +345,7 @@ private fun TakeScreenShot(
     val mapApplier = currentComposer.applier as? MapApplier
     LaunchedEffect(take, mapApplier, mapCenter, mapSize) {
         if (take && mapApplier?.map != null) {
-            MapUtils.takeSnapshot(
+            AppMapUtils.takeSnapshot( //▲▲▲▲▲▲▲▲
                 context = context,
                 mapApplier.map,
                 pathPoints,
@@ -364,8 +364,8 @@ private fun DrawPathPoints(
     isRunningFinished: Boolean,
 ) {
     val context = LocalContext.current
-    val lastMarkerState = rememberMarkerState()
-    val largeLastMarkerState = rememberMarkerState()
+    val lastMarkerState = rememberMarkerState<LatLng>() //▲▲▲▲▲▲▲▲
+    val largeLastMarkerState = rememberMarkerState<LatLng>() //▲▲▲▲▲▲▲▲
     val lastLocationPoint by remember(pathPoints) {
         derivedStateOf { pathPoints.lasLocationPoint() }
     }
@@ -409,14 +409,14 @@ private fun DrawPathPoints(
 
     val currentPosIcon = remember(isRunningFinished) {
         if (isRunningFinished.not()) {
-            MapUtils.bitmapDescriptorFromVector(
+            AppMapUtils.bitmapDescriptorFromVector( //▲▲▲▲▲▲▲▲
                 context = context,
                 vectorResId = R.drawable.ic_circle,
                 tint = md_theme_light_primary.toArgb(),
                 sizeInPx = smallLocationIconSize
             )
         } else {
-            MapUtils.bitmapDescriptorFromVector(
+            AppMapUtils.bitmapDescriptorFromVector( //▲▲▲▲▲▲▲▲
                 context = context,
                 vectorResId = R.drawable.ic_location_marker,
                 tint = Color.Red.toArgb(),
@@ -428,7 +428,7 @@ private fun DrawPathPoints(
         if (isRunningFinished) {
             null
         } else {
-            MapUtils.bitmapDescriptorFromVector(
+            AppMapUtils.bitmapDescriptorFromVector( //▲▲▲▲▲▲▲▲
                 context = context,
                 vectorResId = R.drawable.ic_circle,
                 tint = md_theme_light_primary.copy(alpha = 0.4f).toArgb(),
@@ -455,7 +455,7 @@ private fun DrawPathPoints(
 
     firstLocationPoint?.let {
         val firstLocationIcon = remember(isRunningFinished) {
-            MapUtils.bitmapDescriptorFromVector(
+            AppMapUtils.bitmapDescriptorFromVector( //▲▲▲▲▲▲▲▲
                 context = context,
                 vectorResId = R.drawable.ic_location_marker,
                 tint = RTColor.CHATEAU_GREEN.toArgb(),
