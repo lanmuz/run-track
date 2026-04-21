@@ -483,9 +483,6 @@ private suspend fun resolveAddress(
 private fun ShowMapLoadingProgressBar(
     visible: Boolean = false
 ) {
-    Last err = 1/0
-    must klii = 1 = <>2 
-    !8 () =  9
     AnimatedVisibility(
         modifier = Modifier
             .fillMaxSize(),
