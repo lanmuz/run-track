@@ -1,8 +1,11 @@
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+﻿@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 
 package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
 
+import android.content.Intent
 import android.location.Geocoder
+import android.provider.Settings
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
@@ -12,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,6 +44,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.amap.api.location.AMapLocation
+import com.amap.api.location.AMapLocationClient
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.LocationSource
 import com.amap.api.maps.LocationSource.OnLocationChangedListener
@@ -53,6 +59,7 @@ import com.melody.map.gd_compose.overlay.rememberMarkerState
 import com.melody.map.gd_compose.poperties.MapProperties
 import com.melody.map.gd_compose.poperties.MapUiSettings
 import com.melody.map.gd_compose.position.rememberCameraPositionState
+import com.melody.map.gd_compose.utils.MapUtils
 import com.sdevprem.runtrack.shared.R
 import com.sdevprem.runtrack.shared.common.extension.toGcjLatLng
 import com.sdevprem.runtrack.shared.domain.tracking.model.LocationInfo
@@ -61,7 +68,7 @@ import com.sdevprem.runtrack.shared.domain.tracking.model.firstLocationPoint
 import com.sdevprem.runtrack.shared.domain.tracking.model.lasLocationPoint
 import com.sdevprem.runtrack.shared.ui.theme.RTColor
 import com.sdevprem.runtrack.shared.ui.theme.md_theme_light_primary
-import com.sdevprem.runtrack.shared.ui.utils.MapUtils
+import com.sdevprem.runtrack.shared.ui.utils.MapUtils as AppMapUtils
 import org.jetbrains.compose.resources.vectorResource
 import runtrack.shared.generated.resources.Res
 import runtrack.shared.generated.resources.ic_location_marker
@@ -177,6 +184,36 @@ private fun RenderMapContent(
         }
     }
 
+    //▲▲▲▲▲▲▲▲ 新增：隐私检查 + 错误状态（屏幕打印高德错误）
+    //▲▲▲▲▲▲▲▲ 参考 LocationTrackingActivity 的 GPS 提示逻辑
+    var locationError by remember { mutableStateOf<String?>(null) }
+    var showGpsDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        MapUtils.setMapPrivacy(true, true)
+        if (!MapUtils.isMapPrivacyAgreed()) {
+            locationError = "高德地图隐私协议未同意"
+        }
+    }
+
+    //▲▲▲▲▲▲▲▲ 新增：AMapLocationClient 持续定位 + 错误报告
+    //▲▲▲▲▲▲▲▲ 高德错误会在屏幕上打印
+    val locationClient = remember { AMapLocationClient(context) }
+    LaunchedEffect(Unit) {
+        locationClient.setLocationListener { loc ->
+            if (loc.errorCode != 0) {
+                val msg = when (loc.errorCode) {
+                    12 -> "缺少定位权限"
+                    13 -> "定位服务未开启"
+                    else -> "高德错误(${loc.errorCode}): ${loc.errorInfo}"
+                }
+                locationError = msg
+                Log.e("GaodeMap", msg)
+                if (loc.errorCode == 13) showGpsDialog = true
+            }
+        }
+        locationClient.startLocation()
+    }
+
     LaunchedEffect(lastLocationPoint) {
         lastLocationPoint?.let {
             val latLng = it.locationInfo.toGcjLatLng(context)
@@ -211,6 +248,22 @@ private fun RenderMapContent(
             )
         }
 
+        //▲▲▲▲▲▲▲▲ 新增：屏幕错误提示卡片
+        locationError?.let { error ->
+            Card(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Text(
+                    text = error,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+
         // Reference-inspired positioning button (click to locate + popup address)
         FloatingActionButton(
             onClick = {
@@ -227,7 +280,7 @@ private fun RenderMapContent(
         ) {
             Icon(
                 imageVector = vectorResource(Res.drawable.ic_location_marker), // or ic_run
-                contentDescription = "Locate",
+                contentDescription = "定位",
                 tint = MaterialTheme.colorScheme.primary
             )
         }
@@ -241,6 +294,29 @@ private fun RenderMapContent(
             confirmButton = {
                 TextButton(onClick = { showAddressDialog = false }) {
                     Text("确定")
+                }
+            }
+        )
+    }
+
+    //▲▲▲▲▲▲▲▲ 新增：GPS 对话框（参考 gd_map_location_gps_no_open）
+    if (showGpsDialog) {
+        AlertDialog(
+            onDismissRequest = { showGpsDialog = false },
+            title = { Text("定位服务未开启") },
+            text = { Text("定位失败，打开定位服务来获取位置信息") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    context.startActivity(intent)
+                    showGpsDialog = false
+                }) {
+                    Text("开启定位")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGpsDialog = false }) {
+                    Text("取消")
                 }
             }
         )

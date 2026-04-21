@@ -21,6 +21,14 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         echo "MAPS_API_KEY=CI_PLACEHOLDER" >> local.properties
 
+    - name: Use fixed debug keystore for consistent SHA1 across CI and local
+      run: |
+        mkdir -p ~/.android
+        cp debug-fixed.keystore ~/.android/debug.keystore
+        chmod 600 ~/.android/debug.keystore
+        echo "✅ Using fixed debug keystore copied from debug-fixed.keystore (SHA1 will now match local and EXPECTED_DEBUG_SHA1)"
+        ls -la ~/.android/debug.keystore
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -39,15 +47,7 @@ jobs:
         echo "Expected from AmapDiagnostics.kt:"
         grep -A 3 'EXPECTED_DEBUG_SHA1' shared/src/androidMain/kotlin/com/sdevprem/runtrack/shared/diagnostics/AmapDiagnostics.kt || echo "SHA1 constant not found"
         echo ""
-        echo "Computed from debug keystore:"
-        mkdir -p ~/.android
-        if [ ! -f ~/.android/debug.keystore ]; then
-          echo "Generating debug keystore..."
-          keytool -genkey -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
-            -dname "CN=Android Debug,O=Android,C=US" -noprompt 2>/dev/null || true
-        fi
+        echo "Computed from fixed debug keystore (debug-fixed.keystore):"
         keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
           -storepass android 2>/dev/null | grep -E "(SHA1|SHA-1|Alias name):" || echo "SHA1 computation failed (check Android SDK setup)"
         echo "=== End of SHA1 info ==="
