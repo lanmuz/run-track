@@ -52,55 +52,48 @@ class TrackingManager(
         }
         _trackingDurationInMs.update { 0 }
     }
+private fun getSafeDistance(p1: PathPoint, p2: PathPoint): Float {
+    return if (p1 is PathPoint.LocationPoint && p2 is PathPoint.LocationPoint) {
+        LocationUtils.getDistanceBetweenPathPoints(p1, p2).toFloat()
+    } else {
+        0f
+    }
+}
 
-    private fun addPathPoints(info: LocationTrackingInfo) {
-        _currentRunState.update { state ->
-            val pathPoints = state.pathPoints + PathPoint.LocationPoint(info.locationInfo)
 
+private fun addPathPoints(info: LocationTrackingInfo) {
+    _currentRunState.update { state ->
+        val pathPoints = state.pathPoints + PathPoint.LocationPoint(info.locationInfo)
 
-val newDelta = if (pathPoints.size > 1) {
-            val lastPoint = pathPoints[pathPoints.size - 1]
-            val prevPoint = pathPoints[pathPoints.size - 2]
-            if (lastPoint is PathPoint.LocationPoint && prevPoint is PathPoint.LocationPoint) {
-                LocationUtils.getDistanceBetweenPathPoints(
-                    pathPoint1 = lastPoint,
-                    pathPoint2 = prevPoint
-                )
-            } else {
-                0f
-            }
+        val newDelta = if (pathPoints.size > 1) {
+            getSafeDistance(
+                pathPoints[pathPoints.size - 1],
+                pathPoints[pathPoints.size - 2]
+            )
         } else 0f
 
+        val newStageDist = state.stageDistanceInMeters + newDelta
+        val isStageComplete = newStageDist >= 500f
+        val newStage = if (isStageComplete) (state.currentStage % state.hiitStages.size) + 1 else state.currentStage
 
-val newStageDist = state.stageDistanceInMeters + newDelta
-val isStageComplete = newStageDist >= 500f
-val newStage = if (isStageComplete) (state.currentStage % state.hiitStages.size) + 1 else state.currentStage
-
-            state.copy(
-                pathPoints = pathPoints,
-                distanceInMeters = state.distanceInMeters.run {
-                    var distance = this
-if (pathPoints.size > 1) {
-                    val lastPoint = pathPoints[pathPoints.size - 1]
-                    val prevPoint = pathPoints[pathPoints.size - 2]
-                    if (lastPoint is PathPoint.LocationPoint && prevPoint is PathPoint.LocationPoint) {
-                        distance += LocationUtils.getDistanceBetweenPathPoints(
-                            pathPoint1 = lastPoint,
-                            pathPoint2 = prevPoint
-                        )
-                    }
+        state.copy(
+            pathPoints = pathPoints,
+            distanceInMeters = state.distanceInMeters.run {
+                var distance = this
+                if (pathPoints.size > 1) {
+                    distance += getSafeDistance(
+                        pathPoints[pathPoints.size - 1],
+                        pathPoints[pathPoints.size - 2]
+                    )
                 }
                 distance
-                },
-                speedInKMH = round(info.speedInMS * 3.6f * 100f) / 100f,
-                stageDistanceInMeters = if (isStageComplete) 0f else newStageDist, //▲▲▲▲▲▲▲▲
-                currentStage = newStage //▲▲▲▲▲▲▲▲
-
-
-            )
-        }
+            },
+            speedInKMH = round(info.speedInMS * 3.6f * 100f) / 100f,
+            stageDistanceInMeters = if (isStageComplete) 0f else newStageDist,
+            currentStage = newStage
+        )
     }
-
+}
     fun startResumeTracking() {
         if (isTracking)
             return
