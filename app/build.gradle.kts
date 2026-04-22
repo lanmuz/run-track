@@ -17,13 +17,13 @@ android {
 
 
     signingConfigs {
-        debug {
+        create("debug") { //▲▲▲▲▲▲▲▲▲▲
             storeFile = rootProject.file("debug-fixed.keystore") //▲▲▲▲▲▲▲▲▲▲
             storePassword = "android" //▲▲▲▲▲▲▲▲▲▲
             keyAlias = "androiddebugkey" //▲▲▲▲▲▲▲▲▲▲
             keyPassword = "android" //▲▲▲▲▲▲▲▲▲▲
-        }
-    }
+        } //▲▲▲▲▲▲▲▲▲▲
+    } //▲▲▲▲▲▲▲▲▲▲
 
 
     defaultConfig {
@@ -40,9 +40,9 @@ android {
     }
 
     buildTypes {
-        debug {
-            signingConfig = signingConfigs.debug //▲▲▲▲▲▲▲▲▲▲
-        }
+        getByName("debug") { //▲▲▲▲▲▲▲▲▲▲
+            signingConfig = signingConfigs.getByName("debug") //▲▲▲▲▲▲▲▲▲▲
+        } //▲▲▲▲▲▲▲▲▲▲
         release {
             isMinifyEnabled = false
             proguardFiles(
