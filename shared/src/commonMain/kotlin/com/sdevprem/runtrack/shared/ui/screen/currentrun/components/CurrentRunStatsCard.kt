@@ -56,6 +56,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 
 import androidx.compose.ui.draw.alpha
@@ -75,6 +76,9 @@ fun CurrentRunStatsCard(
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth(),
+            // ▼▼▼▼▼▼▼▼ 修改部分开始 ▼▼▼▼▼▼▼▼
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        // ▲▲▲▲▲▲▲▲ 修改部分结束 ▲▲▲▲▲▲▲▲
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
  // 新增展开按钮 (置于顶端, 默认缩回状态)
@@ -86,8 +90,8 @@ fun CurrentRunStatsCard(
         ) {
             IconButton(onClick = onToggleExpand) { //▲▲▲▲▲▲▲▲
 Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp 
-                                 else Icons.Default.KeyboardArrowDown,
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown 
+                                 else Icons.Default.KeyboardArrowUp,
                     contentDescription = if (isExpanded) "收起" else "展开"
                 )
             } //▲▲▲▲▲▲▲▲

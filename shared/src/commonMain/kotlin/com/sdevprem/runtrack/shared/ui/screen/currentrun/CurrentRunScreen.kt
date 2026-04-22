@@ -96,8 +96,9 @@ fun CurrentRunScreen(
             CurrentRunStatsCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 24.dp)
-                    .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier), //▲▲▲▲▲▲▲▲
+.padding(top = 16.dp, bottom = 8.dp)
+        .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier),
+
                 onPlayPauseButtonClick = viewModel::playPauseTracking,
                 runState = runState,
                 durationInMillis = runningDurationInMillis,
