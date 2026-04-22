@@ -110,10 +110,8 @@ fun CurrentRunScreen(
 }
 
 
-// 在 TopBar 或适当位置添加新阶段按钮 (示例, 手动放置在控制按钮附近)
-IconButton(onClick = { viewModel.startNewStage() }) { //▲▲▲▲▲▲▲▲
-    // Icon for new stage //▲▲▲▲▲▲▲▲
-} //▲▲▲▲▲▲▲▲
+
+
 
 
 @Composable

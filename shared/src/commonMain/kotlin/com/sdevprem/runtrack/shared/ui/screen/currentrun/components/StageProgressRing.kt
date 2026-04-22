@@ -1,7 +1,24 @@
+package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+
+
 @Composable
 fun StageProgressRing(
     currentStage: Int,
-    stageDistanceInMeters: Int,
+    stageDistanceInMeters: Float,
     targetMeters: Int = 500,
     modifier: Modifier = Modifier,
     hiitStageName: String = "HIIT Stage"
@@ -13,7 +30,7 @@ fun StageProgressRing(
         CircularProgressIndicator(
             progress = { progress },
             modifier = Modifier.size(80.dp),
-            color = if (isComplete) Color.Green else MaterialTheme.colorScheme.primary, // ²ÊÉ«¸²¸Ç
+            color = if (isComplete) Color.Green else MaterialTheme.colorScheme.primary,
             strokeWidth = 8.dp,
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -32,9 +49,9 @@ fun StageProgressRing(
     }
 
     if (isComplete) {
-        // ÌáÊ¾Íê³É (¿ÉÔÚ ViewModel ÖÐ´¥·¢ Snackbar)
+        
         LaunchedEffect(Unit) {
-            // SnackbarHostState.showSnackbar("½×¶ÎÍê³É£¡½øÈë HIIT ÏÂÒ»¸ö½×¶Î: ${nextHiitStage}")
+            // SnackbarHostState.showSnackbar("ï¿½×¶ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ HIIT ï¿½ï¿½Ò»ï¿½ï¿½ï¿½×¶ï¿½: ${nextHiitStage}")
         }
     }
 }

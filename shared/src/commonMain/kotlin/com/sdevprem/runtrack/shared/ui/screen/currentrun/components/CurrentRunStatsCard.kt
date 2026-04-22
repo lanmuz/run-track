@@ -45,6 +45,22 @@ import androidx.compose.material3.CircularProgressIndicator //▲▲▲▲▲▲
 import androidx.compose.ui.text.style.TextAlign //▲▲▲▲▲▲▲▲
 import androidx.compose.runtime.LaunchedEffect //▲▲▲▲▲▲▲▲
 import androidx.compose.ui.graphics.Color //▲▲▲▲▲▲▲▲
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+
+
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+
 
 @Composable
 fun CurrentRunStatsCard(
@@ -69,10 +85,11 @@ fun CurrentRunStatsCard(
             horizontalArrangement = Arrangement.End
         ) {
             IconButton(onClick = onToggleExpand) { //▲▲▲▲▲▲▲▲
-                Icon( //▲▲▲▲▲▲▲▲
-                    imageVector = if (isExpanded) vectorResource(/* down icon */) else vectorResource(/* up icon */), //▲▲▲▲▲▲▲▲
-                    contentDescription = if (isExpanded) "Shrink" else "Expand" //▲▲▲▲▲▲▲▲
-                ) //▲▲▲▲▲▲▲▲
+Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp 
+                                 else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "收起" else "展开"
+                )
             } //▲▲▲▲▲▲▲▲
         }
 
@@ -128,7 +145,7 @@ private fun RunningStats(
             stageDistanceInMeters = runState.currentRunState.stageDistanceInMeters,
             hiitStageName = runState.currentRunState.hiitStages.getOrElse(runState.currentRunState.currentStage - 1) { "Stage" },
             isExpanded = isExpanded, //▲▲▲▲▲▲▲▲ (控制ring大小/位置/呼吸效果, 默认小比例靠RunningTime右侧)
-            modifier = if (isExpanded) Modifier.size(180.dp).align(Alignment.CenterHorizontally) else Modifier.size(48.dp) //▲▲▲▲▲▲▲▲
+            modifier = if (isExpanded) Modifier.size(180.dp).align(Alignment.CenterVertically) else Modifier.size(48.dp)
         )
         VerticalDivider(
             thickness = 1.dp,
@@ -160,7 +177,7 @@ private fun RunningStats(
 @Composable
 fun StageProgressRing(
     currentStage: Int,
-    stageDistanceInMeters: Int,
+    stageDistanceInMeters: Float,
     targetMeters: Int = 500,
     modifier: Modifier = Modifier,
     hiitStageName: String = "HIIT Stage",
