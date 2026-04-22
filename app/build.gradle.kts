@@ -17,7 +17,7 @@ android {
 
 
     signingConfigs {
-        create("debug") { //▲▲▲▲▲▲▲▲▲▲
+        getByName("debug") { //▲▲▲▲▲▲▲▲▲▲
             storeFile = rootProject.file("debug-fixed.keystore") //▲▲▲▲▲▲▲▲▲▲
             storePassword = "android" //▲▲▲▲▲▲▲▲▲▲
             keyAlias = "androiddebugkey" //▲▲▲▲▲▲▲▲▲▲
@@ -67,6 +67,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
+    @Suppress("DEPRECATION")
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
