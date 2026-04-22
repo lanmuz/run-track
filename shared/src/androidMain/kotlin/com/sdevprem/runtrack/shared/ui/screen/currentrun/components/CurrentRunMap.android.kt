@@ -2,6 +2,9 @@
 
 package com.sdevprem.runtrack.shared.ui.screen.currentrun.components
 
+import android.net.ConnectivityManager //▲▲▲▲▲▲▲▲
+import android.net.NetworkCapabilities //▲▲▲▲▲▲▲▲
+import android.content.Context //▲▲▲▲▲▲▲▲
 import android.content.Intent
 import android.location.Geocoder
 import android.provider.Settings
@@ -160,6 +163,10 @@ private fun RenderMapContent(
 
     var showAddressDialog by remember { mutableStateOf(false) }
     var currentAddress by remember { mutableStateOf("") }
+    var isNetworkAvailable by remember { mutableStateOf(true) }
+    var locationError by remember { mutableStateOf<String?>(null) }
+    var showGpsDialog by remember { mutableStateOf(false) } 
+
 
     // LocationSource for Gaode blue dot + live location updates (sync with our tracking)
     val locationSource = remember {
@@ -190,7 +197,12 @@ private fun RenderMapContent(
     var showGpsDialog by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         MapUtils.setMapPrivacy(context, true) //▲▲▲▲▲▲▲▲
-    }
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager //▲▲▲▲▲▲▲▲
+        val network = cm.activeNetwork //▲▲▲▲▲▲▲▲
+        val caps = network?.let { cm.getNetworkCapabilities(it) } //▲▲▲▲▲▲▲▲
+        isNetworkAvailable = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true //▲▲▲▲▲▲▲▲
+        if (!isNetworkAvailable) locationError = "网络连接异常.详细:#id:ELA==网络异常.未连接到网络.请检查互联网连接" //▲▲▲▲▲▲▲▲
+    } //▲▲▲▲▲▲▲▲
 
     //▲▲▲▲▲▲▲▲ 新增：AMapLocationClient 持续定位 + 错误报告
     //▲▲▲▲▲▲▲▲ 高德错误会在屏幕上打印
@@ -206,6 +218,9 @@ private fun RenderMapContent(
                 locationError = msg
                 Log.e("GaodeMap", msg)
                 if (loc.errorCode == 13) showGpsDialog = true
+                if (loc.errorCode == 4 || (loc.errorInfo?.contains("网络") == true)) { //▲▲▲▲▲▲▲▲
+                    locationError = "网络连接异常.详细:#id:ELA==网络异常.未连接到网络.请确保设备已连接互联网、高德Key有效且Manifest权限完整" //▲▲▲▲▲▲▲▲
+                }
             }
         }
         locationClient.startLocation()
