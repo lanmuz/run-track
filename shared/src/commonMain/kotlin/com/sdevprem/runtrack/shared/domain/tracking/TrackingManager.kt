@@ -84,7 +84,7 @@ private fun addPathPoints(info: LocationTrackingInfo) {
                     distance += getSafeDistance(
                         pathPoints[pathPoints.size - 1],
                         pathPoints[pathPoints.size - 2]
-                    )
+                    ).toInt()
                 }
                 distance
             },
