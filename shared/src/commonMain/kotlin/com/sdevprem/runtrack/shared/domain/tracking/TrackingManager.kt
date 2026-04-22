@@ -73,22 +73,27 @@ val newDelta = if (pathPoints.size > 1) {
 
 
 val newStageDist = state.stageDistanceInMeters + newDelta
-val isStageComplete = newStageDist >= 500
+val isStageComplete = newStageDist >= 500f
 val newStage = if (isStageComplete) (state.currentStage % state.hiitStages.size) + 1 else state.currentStage
 
             state.copy(
                 pathPoints = pathPoints,
                 distanceInMeters = state.distanceInMeters.run {
                     var distance = this
-                    if (pathPoints.size > 1)
+if (pathPoints.size > 1) {
+                    val lastPoint = pathPoints[pathPoints.size - 1]
+                    val prevPoint = pathPoints[pathPoints.size - 2]
+                    if (lastPoint is PathPoint.LocationPoint && prevPoint is PathPoint.LocationPoint) {
                         distance += LocationUtils.getDistanceBetweenPathPoints(
-                            pathPoint1 = pathPoints[pathPoints.size - 1],
-                            pathPoint2 = pathPoints[pathPoints.size - 2]
+                            pathPoint1 = lastPoint,
+                            pathPoint2 = prevPoint
                         )
-                    distance
+                    }
+                }
+                distance
                 },
                 speedInKMH = round(info.speedInMS * 3.6f * 100f) / 100f,
-                stageDistanceInMeters = if (isStageComplete) 0 else newStageDist, //▲▲▲▲▲▲▲▲
+                stageDistanceInMeters = if (isStageComplete) 0f else newStageDist, //▲▲▲▲▲▲▲▲
                 currentStage = newStage //▲▲▲▲▲▲▲▲
 
 
@@ -136,7 +141,7 @@ fun startNewStage() {
         val size = state.hiitStages.size
         if (size == 0) return@update state
         state.copy(
-            stageDistanceInMeters = 0,
+            stageDistanceInMeters = 0f,
             currentStage = (state.currentStage % size) + 1
         )
     }
