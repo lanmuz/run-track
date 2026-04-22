@@ -40,6 +40,11 @@ import runtrack.shared.generated.resources.ic_finish
 import runtrack.shared.generated.resources.ic_pause
 import runtrack.shared.generated.resources.ic_play
 import runtrack.shared.generated.resources.running_boy
+import androidx.compose.foundation.layout.Box //▲▲▲▲▲▲▲▲ (保留原有import不变, 新增此行)
+import androidx.compose.material3.CircularProgressIndicator //▲▲▲▲▲▲▲▲
+import androidx.compose.ui.text.style.TextAlign //▲▲▲▲▲▲▲▲
+import androidx.compose.runtime.LaunchedEffect //▲▲▲▲▲▲▲▲
+import androidx.compose.ui.graphics.Color //▲▲▲▲▲▲▲▲
 
 @Composable
 fun CurrentRunStatsCard(
@@ -47,13 +52,34 @@ fun CurrentRunStatsCard(
     durationInMillis: Long = 0L,
     runState: CurrentRunStateWithCalories,
     onPlayPauseButtonClick: () -> Unit = {},
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    isExpanded: Boolean = false, //▲▲▲▲▲▲▲▲
+    onToggleExpand: () -> Unit = {} //▲▲▲▲▲▲▲▲
 ) {
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
+ // 新增展开按钮 (置于顶端, 默认缩回状态)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = onToggleExpand) { //▲▲▲▲▲▲▲▲
+                Icon( //▲▲▲▲▲▲▲▲
+                    imageVector = if (isExpanded) vectorResource(/* down icon */) else vectorResource(/* up icon */), //▲▲▲▲▲▲▲▲
+                    contentDescription = if (isExpanded) "Shrink" else "Expand" //▲▲▲▲▲▲▲▲
+                ) //▲▲▲▲▲▲▲▲
+            } //▲▲▲▲▲▲▲▲
+        }
+
+
+
+
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -72,13 +98,14 @@ fun CurrentRunStatsCard(
                 onPlayPauseButtonClick = onPlayPauseButtonClick
             )
         }
-        RunningStats(runState)
+        RunningStats(runState, isExpanded = isExpanded)
     }
 }
 
 @Composable
 private fun RunningStats(
-    runState: CurrentRunStateWithCalories
+    runState: CurrentRunStateWithCalories,
+    isExpanded: Boolean = false //▲▲▲▲▲▲▲▲
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceAround,
@@ -95,6 +122,13 @@ private fun RunningStats(
             painter = painterResource(Res.drawable.running_boy),
             unit = "km",
             value = (runState.currentRunState.distanceInMeters / 1000f).toString()
+        )
+        StageProgressRing(
+            currentStage = runState.currentRunState.currentStage,
+            stageDistanceInMeters = runState.currentRunState.stageDistanceInMeters,
+            hiitStageName = runState.currentRunState.hiitStages.getOrElse(runState.currentRunState.currentStage - 1) { "Stage" },
+            isExpanded = isExpanded, //▲▲▲▲▲▲▲▲ (控制ring大小/位置/呼吸效果, 默认小比例靠RunningTime右侧)
+            modifier = if (isExpanded) Modifier.size(180.dp).align(Alignment.CenterHorizontally) else Modifier.size(48.dp) //▲▲▲▲▲▲▲▲
         )
         VerticalDivider(
             thickness = 1.dp,
@@ -122,6 +156,74 @@ private fun RunningStats(
     }
 }
 
+// 新增/修改的StageProgressRing (置于文件末尾, 保留原有所有preview/函数/注释/缩进不变)
+@Composable
+fun StageProgressRing(
+    currentStage: Int,
+    stageDistanceInMeters: Int,
+    targetMeters: Int = 500,
+    modifier: Modifier = Modifier,
+    hiitStageName: String = "HIIT Stage",
+    isExpanded: Boolean = false //▲▲▲▲▲▲▲▲
+) {
+    val progress = (stageDistanceInMeters.toFloat() / targetMeters).coerceIn(0f, 1f) //▲▲▲▲▲▲▲▲
+    val isComplete = progress >= 1f //▲▲▲▲▲▲▲▲
+    val infiniteTransition = rememberInfiniteTransition() //▲▲▲▲▲▲▲▲ (Keep式呼吸光)
+    val breathScale by infiniteTransition.animateFloat( //▲▲▲▲▲▲▲▲
+        initialValue = if (isExpanded) 0.95f else 1f, //▲▲▲▲▲▲▲▲
+        targetValue = if (isExpanded) 1.05f else 1f, //▲▲▲▲▲▲▲▲
+        animationSpec = infiniteRepeatable( //▲▲▲▲▲▲▲▲
+            animation = tween(1200, easing = FastOutSlowInEasing), //▲▲▲▲▲▲▲▲
+            repeatMode = RepeatMode.Reverse //▲▲▲▲▲▲▲▲
+        ) //▲▲▲▲▲▲▲▲
+    ) //▲▲▲▲▲▲▲▲
+    val glowAlpha by infiniteTransition.animateFloat( //▲▲▲▲▲▲▲▲
+        initialValue = if (isExpanded) 0.3f else 0f, //▲▲▲▲▲▲▲▲
+        targetValue = if (isExpanded) 0.7f else 0f, //▲▲▲▲▲▲▲▲
+        animationSpec = infiniteRepeatable( //▲▲▲▲▲▲▲▲
+            animation = tween(800), //▲▲▲▲▲▲▲▲
+            repeatMode = RepeatMode.Reverse //▲▲▲▲▲▲▲▲
+        ) //▲▲▲▲▲▲▲▲
+    ) //▲▲▲▲▲▲▲▲
+    Box(modifier = modifier.size(if (isExpanded) 180.dp else 48.dp), contentAlignment = Alignment.Center) { //▲▲▲▲▲▲▲▲ (默认小, 展开居中大)
+        if (isExpanded) { //▲▲▲▲▲▲▲▲ (呼吸光特效层)
+            Box( //▲▲▲▲▲▲▲▲
+                modifier = Modifier
+                    .size(200.dp)
+                    .scale(breathScale)
+                    .alpha(glowAlpha)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+            ) //▲▲▲▲▲▲▲▲
+        } //▲▲▲▲▲▲▲▲
+        CircularProgressIndicator( //▲▲▲▲▲▲▲▲
+            progress = { progress },
+            modifier = Modifier.size(if (isExpanded) 180.dp else 48.dp).scale(if (isExpanded) breathScale else 1f), //▲▲▲▲▲▲▲▲
+            color = if (isComplete) Color.Green else MaterialTheme.colorScheme.primary,
+            strokeWidth = if (isExpanded) 16.dp else 6.dp, //▲▲▲▲▲▲▲▲
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "$stageDistanceInMeters/$targetMeters m",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isComplete) Color.Green else MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Stage $currentStage\n$hiitStageName",
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+    if (isComplete) {
+        LaunchedEffect(Unit) {
+            // Snackbar or prompt: "阶段完成！进入 HIIT 下一个阶段" (在ViewModel中处理)
+        }
+    }
+}
 
 @Composable
 private fun RunningCardTime(

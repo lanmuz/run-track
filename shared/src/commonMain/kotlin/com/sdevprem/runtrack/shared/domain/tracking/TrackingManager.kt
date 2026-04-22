@@ -56,6 +56,14 @@ class TrackingManager(
     private fun addPathPoints(info: LocationTrackingInfo) {
         _currentRunState.update { state ->
             val pathPoints = state.pathPoints + PathPoint.LocationPoint(info.locationInfo)
+val newDelta = if (pathPoints.size > 1) LocationUtils.getDistanceBetweenPathPoints( //▲▲▲▲▲▲▲▲
+                pathPoint1 = pathPoints[pathPoints.size - 1], //▲▲▲▲▲▲▲▲
+                pathPoint2 = pathPoints[pathPoints.size - 2] //▲▲▲▲▲▲▲▲
+            ) else 0 //▲▲▲▲▲▲▲▲
+val newStageDist = state.stageDistanceInMeters + newDelta
+val isStageComplete = newStageDist >= 500
+val newStage = if (isStageComplete) (state.currentStage % state.hiitStages.size) + 1 else state.currentStage
+
             state.copy(
                 pathPoints = pathPoints,
                 distanceInMeters = state.distanceInMeters.run {
@@ -68,6 +76,10 @@ class TrackingManager(
                     distance
                 },
                 speedInKMH = round(info.speedInMS * 3.6f * 100f) / 100f
+                stageDistanceInMeters = if (isStageComplete) 0 else newStageDist, //▲▲▲▲▲▲▲▲
+                currentStage = newStage //▲▲▲▲▲▲▲▲
+
+
             )
         }
     }
@@ -107,5 +119,7 @@ class TrackingManager(
         postInitialValue()
         isFirst = true
     }
-
+    fun startNewStage() { //▲▲▲▲▲▲▲▲ (新增方法用于手动新设定阶段)
+        _currentRunState.update { it.copy(stageDistanceInMeters = 0, currentStage = (it.currentStage % it.hiitStages.size) + 1) } //▲▲▲▲▲▲▲▲
+    }
 }

@@ -54,6 +54,7 @@ fun CurrentRunScreen(
 
     var isRunningFinished by rememberSaveable { mutableStateOf(false) }
     var shouldShowRunningCard by rememberSaveable { mutableStateOf(false) }
+    var isCardExpanded by rememberSaveable { mutableStateOf(false) } //▲▲▲▲▲▲▲▲
 
     val runState by viewModel.currentRunStateWithCalories.collectAsStateWithLifecycle()
     val runningDurationInMillis by viewModel.runningDurationInMillis.collectAsStateWithLifecycle()
@@ -95,15 +96,25 @@ fun CurrentRunScreen(
             CurrentRunStatsCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 24.dp),
+                    .padding(vertical = 16.dp, horizontal = 24.dp)
+                    .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier), //▲▲▲▲▲▲▲▲
                 onPlayPauseButtonClick = viewModel::playPauseTracking,
                 runState = runState,
                 durationInMillis = runningDurationInMillis,
-                onFinish = { isRunningFinished = true }
+                onFinish = { isRunningFinished = true },
+                isExpanded = isCardExpanded, //▲▲▲▲▲▲▲▲
+                onToggleExpand = { isCardExpanded = !isCardExpanded } //▲▲▲▲▲▲▲▲
             )
         }
     }
 }
+
+
+// 在 TopBar 或适当位置添加新阶段按钮 (示例, 手动放置在控制按钮附近)
+IconButton(onClick = { viewModel.startNewStage() }) { //▲▲▲▲▲▲▲▲
+    // Icon for new stage //▲▲▲▲▲▲▲▲
+} //▲▲▲▲▲▲▲▲
+
 
 @Composable
 private fun TopBar(
