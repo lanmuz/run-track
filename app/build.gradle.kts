@@ -16,6 +16,16 @@ android {
     project.ext.set("MAPS_API_KEY", project.findProperty("MAPS_API_KEY") ?: "CI_PLACEHOLDER")
 
 
+    signingConfigs {
+        debug {
+            storeFile = rootProject.file("debug-fixed.keystore") //▲▲▲▲▲▲▲▲▲▲
+            storePassword = "android" //▲▲▲▲▲▲▲▲▲▲
+            keyAlias = "androiddebugkey" //▲▲▲▲▲▲▲▲▲▲
+            keyPassword = "android" //▲▲▲▲▲▲▲▲▲▲
+        }
+    }
+
+
     defaultConfig {
         applicationId = "com.sdevprem.runtrack"
         minSdk = 24
@@ -30,6 +40,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.debug //▲▲▲▲▲▲▲▲▲▲
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

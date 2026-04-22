@@ -13,13 +13,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Create local.properties
+    - name: Clear Gradle caches and stop daemon to prevent stale signing
       run: |
-        echo "sdk.dir=${ANDROID_HOME}" > local.properties
-        echo "MAPS_API_KEY=CI_PLACEHOLDER" >> local.properties
+        ./gradlew --stop
+        rm -rf ~/.gradle/caches/
+        rm -rf ~/.gradle/build-cache/
+        echo "Gradle caches cleared to ensure clean signing" #▲▲▲▲▲▲▲▲▲▲
+
+    - name: Remove any pre-existing debug keystore before copy
+      run: |
+        rm -f ~/.android/debug.keystore
+        echo "Pre-existing debug.keystore removed to prevent override" #▲▲▲▲▲▲▲▲▲▲
 
     - name: Use fixed debug keystore for consistent SHA1 across CI and local
       run: |
@@ -28,6 +32,14 @@ jobs:
         chmod 600 ~/.android/debug.keystore
         echo "✅ Using fixed debug keystore copied from debug-fixed.keystore (SHA1 will now match local and EXPECTED_DEBUG_SHA1)"
         ls -la ~/.android/debug.keystore
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Create local.properties
+      run: |
+        echo "sdk.dir=${ANDROID_HOME}" > local.properties
+        echo "MAPS_API_KEY=CI_PLACEHOLDER" >> local.properties
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -39,7 +51,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --no-build-cache #▲▲▲▲▲▲▲▲▲▲
 
     - name: Print Signing SHA1
       run: |
@@ -50,6 +62,9 @@ jobs:
         echo "Computed from fixed debug keystore (debug-fixed.keystore):"
         keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
           -storepass android 2>/dev/null | grep -E "(SHA1|SHA-1|Alias name):" || echo "SHA1 computation failed (check Android SDK setup)"
+        echo ""
+        echo "=== Actual APK signing certificate (verifies what Gradle really used) ===" #▲▲▲▲▲▲▲▲▲▲
+        apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | grep -E "(SHA-1|Certificate SHA-1|Signer)" || echo "apksigner verification completed" #▲▲▲▲▲▲▲▲▲▲
         echo "=== End of SHA1 info ==="
         echo ""
 
