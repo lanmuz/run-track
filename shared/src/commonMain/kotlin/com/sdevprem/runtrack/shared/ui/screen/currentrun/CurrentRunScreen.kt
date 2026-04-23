@@ -64,12 +64,13 @@ fun CurrentRunScreen(
         shouldShowRunningCard = true
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         // 地图占据上方空间，与下方跑步界面上下排列、不重叠
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+.fillMaxWidth()
+                .fillMaxHeight(0.7f)
+.align(Alignment.TopCenter)
         ) {
             Map(
                 modifier = Modifier.fillMaxSize(),
@@ -90,15 +91,17 @@ fun CurrentRunScreen(
         }
 
         ComposeUtils.SlideUpAnimatedVisibility(
-            modifier = Modifier.fillMaxWidth(),
+.fillMaxWidth()
+                .fillMaxHeight(0.35f)
+                .align(Alignment.BottomCenter)
+                .offset(y = (-24).dp), // 约5%重叠（可根据实际屏幕微调）
             visible = shouldShowRunningCard
         ) {
             CurrentRunStatsCard(
                 modifier = Modifier
-                    .fillMaxWidth()
-.padding(top = 16.dp, bottom = 8.dp)
-        .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier),
-
+.fillMaxWidth()
+                    .padding(vertical = 16.dp, horizontal = 24.dp)
+                    .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier), //▲▲▲▲▲▲▲▲
                 onPlayPauseButtonClick = viewModel::playPauseTracking,
                 runState = runState,
                 durationInMillis = runningDurationInMillis,

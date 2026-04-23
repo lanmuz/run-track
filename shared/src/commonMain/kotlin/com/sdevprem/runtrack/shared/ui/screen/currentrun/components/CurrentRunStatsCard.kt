@@ -78,6 +78,9 @@ fun CurrentRunStatsCard(
             .fillMaxWidth(),
             // ▼▼▼▼▼▼▼▼ 修改部分开始 ▼▼▼▼▼▼▼▼
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        colors = CardDefaults.elevatedCardColors(
+        containerColor = Color.Transparent
+    ),
         // ▲▲▲▲▲▲▲▲ 修改部分结束 ▲▲▲▲▲▲▲▲
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
