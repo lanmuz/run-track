@@ -32,6 +32,8 @@ import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import runtrack.shared.generated.resources.Res
 import runtrack.shared.generated.resources.ic_back
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
 
 /**
  * Current running screen with Gaode map integration.
@@ -91,6 +93,7 @@ fun CurrentRunScreen(
         }
 
         ComposeUtils.SlideUpAnimatedVisibility(
+            modifier = Modifier
 .fillMaxWidth()
                 .fillMaxHeight(0.35f)
                 .align(Alignment.BottomCenter)
