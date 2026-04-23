@@ -139,4 +139,36 @@ fun startNewStage() {
         )
     }
 }
+
+// ==================== 手动切换阶段 ====================
+    fun previousStage() {
+        _currentRunState.update { state ->
+            if (state.currentStage > 1) {                                    // 只有不是第一阶段才能后退
+                state.copy(
+                    currentStage = state.currentStage - 1,                   // 阶段号减1
+                    stageDistanceInMeters = 0f                               // 重置当前阶段进度
+                )
+            } else {
+                state                                                    // 已经是第一阶段则不做任何事
+            }
+        }
+    }
+
+    fun nextStage() {
+        _currentRunState.update { state ->
+            val size = state.hiitStages.size
+            if (state.currentStage < size) {                                 // 只有不是最后阶段才能前进
+                state.copy(
+                    currentStage = state.currentStage + 1,                   // 阶段号加1
+                    stageDistanceInMeters = 0f                               // 重置当前阶段进度
+                )
+            } else {
+                state                                                    // 已经是最后阶段则不做任何事
+            }
+        }
+    }
+    
+
+
+
 }

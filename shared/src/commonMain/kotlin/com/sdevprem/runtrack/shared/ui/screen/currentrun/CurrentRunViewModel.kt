@@ -63,4 +63,18 @@ class CurrentRunViewModel(
         repository.insertRun(run)
     }
 
+    // ==================== HIIT 阶段切换 ====================
+    fun previousStage() {
+        if (currentRunStateWithCalories.value.currentRunState.isTracking) {  // 只有正在跑步时才能切换阶段
+            trackingManager.previousStage()                                  // 调用 TrackingManager 真正执行切换
+        }
+    }
+
+    fun nextStage() {
+        if (currentRunStateWithCalories.value.currentRunState.isTracking) {  // 只有正在跑步时才能切换阶段
+            trackingManager.nextStage()                                      // 调用 TrackingManager 真正执行切换
+        }
+    }
+
+
 }

@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.sdevprem.runtrack"
-    compileSdk = 36
+    compileSdk = 35
 
     project.ext.set("MAPS_API_KEY", project.findProperty("MAPS_API_KEY") ?: "CI_PLACEHOLDER")
 

@@ -78,9 +78,9 @@ fun CurrentRunStatsCard(
             .fillMaxWidth(),
             // ▼▼▼▼▼▼▼▼ 修改部分开始 ▼▼▼▼▼▼▼▼
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        colors = CardDefaults.elevatedCardColors(
-        containerColor = Color.Transparent
-    ),
+        //colors = CardDefaults.elevatedCardColors(
+        //containerColor = Color.Transparent
+    //),
         // ▲▲▲▲▲▲▲▲ 修改部分结束 ▲▲▲▲▲▲▲▲
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
@@ -104,24 +104,40 @@ Icon(
 
 
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(top = 24.dp, bottom = 16.dp)
-                .padding(horizontal = 20.dp)
-        ) {
-            RunningCardTime(
-                modifier = Modifier
-                    .weight(1f),
-                durationInMillis = durationInMillis,
-            )
-            TrackingControlButton(
-                isRunning = runState.currentRunState.isTracking,
-                durationInMillis = durationInMillis,
-                onFinish = onFinish,
-                onPlayPauseButtonClick = onPlayPauseButtonClick
-            )
-        }
+// 顶部控制区：左箭头 + 居中控制按钮 + 右箭头
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 8.dp, bottom = 4.dp),
+    horizontalArrangement = Arrangement.Center,
+    verticalAlignment = Alignment.CenterVertically
+) {
+    // 左箭头（上一个阶段）
+    IconButton(onClick = onPreviousStage) {
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowLeft,
+            contentDescription = "上一个阶段",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
+    // 中间控制按钮（播放/暂停/结束）
+    TrackingControlButton(
+        isRunning = runState.currentRunState.isTracking,
+        durationInMillis = durationInMillis,
+        onFinish = onFinish,
+        onPlayPauseButtonClick = onPlayPauseButtonClick
+    )
+
+    // 右箭头（下一个阶段）
+    IconButton(onClick = onNextStage) {
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowRight,
+            contentDescription = "下一个阶段",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
         RunningStats(runState, isExpanded = isExpanded)
     }
 }
@@ -135,7 +151,7 @@ private fun RunningStats(
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = Modifier
             .padding(horizontal = 20.dp)
-            .padding(bottom = 20.dp)
+            .padding(bottom = 8.dp)
             .height(IntrinsicSize.Min)
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -144,15 +160,8 @@ private fun RunningStats(
         RunningStatsItem(
             modifier = Modifier,
             painter = painterResource(Res.drawable.running_boy),
-            unit = "km",
-            value = (runState.currentRunState.distanceInMeters / 1000f).toString()
-        )
-        StageProgressRing(
-            currentStage = runState.currentRunState.currentStage,
-            stageDistanceInMeters = runState.currentRunState.stageDistanceInMeters,
-            hiitStageName = runState.currentRunState.hiitStages.getOrElse(runState.currentRunState.currentStage - 1) { "Stage" },
-            isExpanded = isExpanded, //▲▲▲▲▲▲▲▲ (控制ring大小/位置/呼吸效果, 默认小比例靠RunningTime右侧)
-            modifier = if (isExpanded) Modifier.size(180.dp).align(Alignment.CenterVertically) else Modifier.size(48.dp)
+            unit = "Time",
+            value = getFormattedStopwatchTime(durationInMillis)
         )
         VerticalDivider(
             thickness = 1.dp,
@@ -178,6 +187,25 @@ private fun RunningStats(
             value = runState.currentRunState.speedInKMH.toString()
         )
     }
+
+
+// StageProgressRing 独立居中（大状态美观展示，左右无元素）   ← 第170行（新增）
+// StageProgressRing 独立居中（大状态展示）
+    val currentStageInfo = runState.currentRunState.hiitStages.getOrNull(runState.currentRunState.currentStage - 1)
+    StageProgressRing(
+        currentStage = runState.currentRunState.currentStage,
+        stageDistanceInMeters = runState.currentRunState.stageDistanceInMeters,
+        targetMeters = currentStageInfo?.distanceMeters ?: 500,
+        hiitStageName = currentStageInfo?.name ?: "开始跑步",
+        isExpanded = isExpanded,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+            .size(if (isExpanded) 160.dp else 72.dp)
+            .align(Alignment.CenterHorizontally)
+    )
+}
+
 }
 
 // 新增/修改的StageProgressRing (置于文件末尾, 保留原有所有preview/函数/注释/缩进不变)

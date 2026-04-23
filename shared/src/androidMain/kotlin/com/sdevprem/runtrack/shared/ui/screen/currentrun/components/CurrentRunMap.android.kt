@@ -214,14 +214,13 @@ private fun RenderMapContent(
                 val msg = when (loc.errorCode) {
                     12 -> "缺少定位权限"
                     13 -> "定位服务未开启"
+                    4 -> "网络连接异常.详细:#id:ELA==网络异常.未连接到网络.请确保设备已连接互联网、高德Key有效且Manifest权限完整"
                     else -> "高德错误(${loc.errorCode}): ${loc.errorInfo}"
                 }
-                locationError = msg
+                //locationError = msg
                 Log.e("GaodeMap", msg)
-                if (loc.errorCode == 13) showGpsDialog = true
-                if (loc.errorCode == 4 || (loc.errorInfo?.contains("网络") == true)) { //▲▲▲▲▲▲▲▲
-                    locationError = "网络连接异常.详细:#id:ELA==网络异常.未连接到网络.请确保设备已连接互联网、高德Key有效且Manifest权限完整" //▲▲▲▲▲▲▲▲
-                }
+                //if (loc.errorCode != 0) showGpsDialog = true
+
             }
         }
         locationClient.startLocation()

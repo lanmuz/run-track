@@ -134,7 +134,9 @@ fun CurrentRunScreen(
                             cardTopOffset.animateTo(420f)
                         }
                     }
-                }
+                }, //▲▲▲▲▲▲▲▲
+                onPreviousStage = { viewModel.previousStage() },       // ← 新增：上一阶段按钮
+                onNextStage = { viewModel.nextStage() }                // ← 新增：下一阶段按钮
             )
         }
     }
