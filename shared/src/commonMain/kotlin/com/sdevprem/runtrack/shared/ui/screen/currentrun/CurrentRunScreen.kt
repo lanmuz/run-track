@@ -2,14 +2,18 @@
 
 package com.sdevprem.runtrack.shared.ui.screen.currentrun
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,49 +21,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sdevprem.runtrack.shared.ui.common.common.animation.ComposeUtils
 import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.CurrentRunStatsCard
 import com.sdevprem.runtrack.shared.ui.screen.currentrun.components.Map
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
 import runtrack.shared.generated.resources.Res
 import runtrack.shared.generated.resources.ic_back
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.offset
 
-/**
- * Current running screen with Gaode map integration.
- * Clean version: no excessive blank lines or dead code.
- * Suppress added to prevent RowColumnParentData.weight internal access error.
- */
 @Composable
 fun CurrentRunScreen(
     navigateUp: () -> Unit,
     viewModel: CurrentRunViewModel = koinViewModel()
 ) {
-    // LocationUtils check (kept per request; requires additional imports if uncommented):
-    // import android.app.Activity
-    // import androidx.compose.ui.platform.LocalContext
-    // import com.sdevprem.runtrack.shared.ui.utils.LocationUtils
-    // val context = LocalContext.current
-    // LaunchedEffect(key1 = true) {
-    //     LocationUtils.checkAndRequestLocationSetting(context as Activity)
-    // }
-
     var isRunningFinished by rememberSaveable { mutableStateOf(false) }
     var shouldShowRunningCard by rememberSaveable { mutableStateOf(false) }
-    var isCardExpanded by rememberSaveable { mutableStateOf(false) } //▲▲▲▲▲▲▲▲
+    var isCardExpanded by rememberSaveable { mutableStateOf(false) }
 
     val runState by viewModel.currentRunStateWithCalories.collectAsStateWithLifecycle()
     val runningDurationInMillis by viewModel.runningDurationInMillis.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+
+    // 卡片顶部绝对位置（类似 CSS top: xx%）
+    // 初始值 420f ≈ 只露出底部 280dp + 2% 溢出
+    val cardTopOffset = remember { Animatable(420f) }
 
     LaunchedEffect(key1 = Unit) {
         delay(ComposeUtils.slideDownInDuration + 200L)
@@ -67,59 +64,81 @@ fun CurrentRunScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 地图占据上方空间，与下方跑步界面上下排列、不重叠
-        Box(
-            modifier = Modifier
-.fillMaxWidth()
-                .fillMaxHeight(0.7f)
-.align(Alignment.TopCenter)
-        ) {
-            Map(
-                modifier = Modifier.fillMaxSize(),
-                pathPoints = runState.currentRunState.pathPoints,
-                isRunningFinished = isRunningFinished,
-                currentSpeedInKMH = runState.currentRunState.speedInKMH,
-            ) {
-                viewModel.finishRun(it)
-                navigateUp()
-            }
 
-            TopBar(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(24.dp),
-                onNavigateUp = navigateUp
-            )
+        // ==================== 1. 地图铺满整个屏幕 ====================
+        Map(
+            modifier = Modifier.fillMaxSize(),
+            pathPoints = runState.currentRunState.pathPoints,
+            isRunningFinished = isRunningFinished,
+            currentSpeedInKMH = runState.currentRunState.speedInKMH,
+        ) {
+            viewModel.finishRun(it)
+            navigateUp()
         }
 
-        ComposeUtils.SlideUpAnimatedVisibility(
+        TopBar(
             modifier = Modifier
-.fillMaxWidth()
-                .fillMaxHeight(0.35f)
-                .align(Alignment.BottomCenter)
-                .offset(y = (-24).dp), // 约5%重叠（可根据实际屏幕微调）
-            visible = shouldShowRunningCard
-        ) {
+                .align(Alignment.TopStart)
+                .padding(24.dp),
+            onNavigateUp = navigateUp
+        )
+
+        // ==================== 2. 可拖拽卡片（绝对定位 + 全屏容器） ====================
+        if (shouldShowRunningCard) {
             CurrentRunStatsCard(
                 modifier = Modifier
-.fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 24.dp)
-                    .then(if (isCardExpanded) Modifier.fillMaxSize().padding(bottom = 40.dp) else Modifier), //▲▲▲▲▲▲▲▲
+                    .fillMaxWidth()
+                    .fillMaxHeight(1f)                          // 始终全屏高度（解决断层，像抽纸）
+                    .align(Alignment.BottomCenter)
+                    .offset(y = cardTopOffset.value.dp)         // 绝对 top 位置（类似 CSS top: %）
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDrag = { _, dragAmount ->
+                                scope.launch {
+                                    val newTop = (cardTopOffset.value + dragAmount.y)
+                                        .coerceIn(60f, 520f)
+                                    cardTopOffset.snapTo(newTop)
+                                }
+                            },
+                            onDragEnd = {
+                                scope.launch {
+                                    // 60% 阈值判断
+                                    if (cardTopOffset.value < 220f) {
+                                        isCardExpanded = true
+                                        cardTopOffset.animateTo(
+                                            60f,
+                                            spring(stiffness = Spring.StiffnessMedium)
+                                        )
+                                    } else {
+                                        isCardExpanded = false
+                                        cardTopOffset.animateTo(
+                                            420f,
+                                            spring(stiffness = Spring.StiffnessMedium)
+                                        )
+                                    }
+                                }
+                            }
+                        )
+                    },
                 onPlayPauseButtonClick = viewModel::playPauseTracking,
                 runState = runState,
                 durationInMillis = runningDurationInMillis,
                 onFinish = { isRunningFinished = true },
-                isExpanded = isCardExpanded, //▲▲▲▲▲▲▲▲
-                onToggleExpand = { isCardExpanded = !isCardExpanded } //▲▲▲▲▲▲▲▲
+                isExpanded = isCardExpanded,
+                onToggleExpand = {
+                    isCardExpanded = !isCardExpanded
+                    scope.launch {
+                        if (isCardExpanded) {
+                            cardTopOffset.animateTo(60f)
+                        } else {
+                            cardTopOffset.animateTo(420f)
+                        }
+                    }
+                }
             )
         }
     }
 }
-
-
-
-
-
 
 @Composable
 private fun TopBar(
